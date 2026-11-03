@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf7f0">
+  <title>AI 戏精导演 · 多人片场</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <symbol id="i-clapper" viewBox="0 0 32 32"><path d="M4 12h25v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM3 7 27 1l2 7-24 6z" fill="currentColor"/><path d="m7 6 4-1 4 6-4 1zm10-2 4-1 4 6-4 1zm-3 14 8 5-8 5z" fill="#fff7e8"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4" fill="currentColor"/><path d="M1 21v-3a8 8 0 0 1 16 0v3zM17 3a4 4 0 0 1 0 8 6 6 0 0 0 0-8m1 10c4 0 5 3 5 5v3h-4v-3a11 11 0 0 0-1-5" fill="currentColor"/></symbol>
+  <symbol id="i-video" viewBox="0 0 24 24"><rect x="2" y="5" width="14" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 9 6-3v12l-6-3z" fill="currentColor"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M5 4a1 1 0 0 1 2-1l14 8a1 1 0 0 1 0 2L7 21a1 1 0 0 1-2-1z" fill="currentColor"/></symbol>
+  <symbol id="i-mask" viewBox="0 0 24 24"><path d="M2 5c6-3 14-3 20 0 0 10-5 16-10 16S2 15 2 5" fill="currentColor"/><ellipse cx="7" cy="10" rx="2" ry="1.4" fill="#fff9eb"/><ellipse cx="17" cy="10" rx="2" ry="1.4" fill="#fff9eb"/><path d="M8 15q4 4 8 0" fill="none" stroke="#fff9eb" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-sound" viewBox="0 0 24 24"><path d="M2 8h5l6-5v18l-6-5H2z" fill="currentColor"/><path d="M16 7q5 5 0 10m3-13q8 8 0 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-face" viewBox="0 0 24 24"><path d="M7 2H3v5m14-5h4v5M3 17v4h4m14-4v4h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/><path d="M8 14q4 5 8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 10v4m4-8v12m5-16v20m5-16v12m4-8v4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></symbol>
+</defs></svg>
+<main class="app">
+  <header class="header">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><svg><use href="#i-clapper"/></svg></span><h1>AI 戏精导演</h1><span class="brand-chip">多人片场</span></div>
+    <div class="header-right"><svg aria-hidden="true"><use href="#i-users"/></svg><span id="playerCount">0 / 4 人入镜</span></div>
+  </header>
+  <section class="intro"><h2>放下包袱，一起加戏。</h2><p>AI 加戏，大家即兴飙戏，看看谁最会演！</p></section>
+  <div class="workspace">
+    <div class="stage-wrap">
+      <section class="stage" id="stage" aria-label="摄像头与卡通角色舞台">
+        <video id="video" autoplay muted playsinline aria-hidden="true"></video>
+        <canvas id="canvas" width="1200" height="660" aria-label="卡通遮脸后的摄像头画面"></canvas>
+        <div class="overlay" id="overlay"></div>
+        <div class="stage-top"><span class="stage-pill"><svg aria-hidden="true"><use href="#i-clapper"/></svg><span id="tag">效果示意</span></span><span class="stage-pill" id="maskBadge">卡通身份已准备</span></div>
+        <div class="placeholder" id="placeholder"><h2>开启摄像头，让大家一起入镜。</h2></div>
+        <div class="subtitle" id="subtitle" role="status"><span id="subtitleText"></span></div>
+        <div class="stage-hint" id="stageHint">示意角色 · 摄像头未开启</div>
+      </section>
+      <div class="stage-toolbar"><div class="toolbar-left"><span>◉ 镜像画面</span><span id="performance">卡通角色自动跟随</span></div><button class="text-button" id="demo" type="button">播放加戏示例 ↗</button></div>
+      <section class="cast-section" aria-label="入镜玩家"><h2 class="cast-caption">本场演员</h2><div class="players" id="players"></div><p class="players-note">点击角色卡更换形象。扶额、抱头或转头，试试下一秒会发生什么。</p></section>
+      <p id="status" class="status" role="status">片场已就绪。先选个卡通身份，再开启摄像头。</p>
+    </div>
+    <aside class="panel" aria-label="导演控制台">
+      <div class="panel-heading"><svg aria-hidden="true"><use href="#i-clapper"/></svg><h2>导演控制台</h2></div>
+      <section class="panel-section"><div class="label-row"><label for="level"><svg aria-hidden="true"><use href="#i-wave"/></svg>加戏强度</label><span class="level-name" id="levelName">夸张</span></div><input class="range" id="level" type="range" min="0" max="2" step="1" value="1" aria-valuetext="夸张"><div class="slider-labels" id="levelLabels"><span>普通</span><span class="current">夸张</span><span>离谱</span></div><div class="example"><b>比如，你只是转了个头…</b><span id="levelExample">就在这一刻，他发现事情远没有想象中那么简单。</span></div></section>
+      <section class="panel-section"><div class="label-row"><span><svg aria-hidden="true"><use href="#i-mask"/></svg>卡通身份</span></div><div class="avatar-options" id="avatarOptions"></div><p class="avatar-note" id="avatarNote">为你的小剧场选一个主角。</p></section>
+      <div class="switch-section"><span class="protected"><svg aria-hidden="true"><use href="#i-face"/></svg>默认卡通遮脸 ✓</span><label class="switch"><svg aria-hidden="true"><use href="#i-sound"/></svg>声音<input type="checkbox" id="soundEnabled" checked aria-label="剧情音效"></label></div>
+      <div class="actions"><button type="button" class="primary" id="start"><svg aria-hidden="true"><use href="#i-play"/></svg><span id="startLabel">开始加戏</span></button><button type="button" class="secondary" id="cameraTest"><svg aria-hidden="true"><use href="#i-video"/></svg><span id="cameraLabel">开启摄像头</span></button><button type="button" class="end" id="stop" disabled>结束本场 / 关闭摄像头</button><p class="action-note">首次加载需要联网 · 摄像头画面在本机处理</p></div>
+    </aside>
+  </div>
+  <section class="history-section"><div class="history-heading"><h2><svg aria-hidden="true"><use href="#i-clapper"/></svg>片场记录</h2><span class="history-count" id="eventCount">0 次加戏</span></div><ol id="history" class="history"><li class="empty-history">故事还没开始，等你们来演。</li></ol></section>
+  <details class="diagnostic" id="diagnostic"><summary>连接遇到问题？查看启动诊断</summary><pre id="env"></pre><pre id="logs"></pre><button id="copyLog" type="button">复制诊断日志</button></details>
+  <footer class="footer"><span>保持面部可见，侧脸或遮挡可能影响跟随。</span><span>小动作，大剧情。</span></footer>
+</main>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const APP_BUILD = 'V0.7 · 奶油绿片场', AI_VERSION = '0.10.21', MAX_PLAYERS = 4;
+const video = $('video'), canvas = $('canvas'), ctx = canvas.getContext('2d');
+const frame = document.createElement('canvas'), frameCtx = frame.getContext('2d');
+const avatars = [
+  {name:'狐狸',alias:'阿狐',color:'#eca455',light:'#f8e5bd',type:'fox',sprite:0,face:[.5,.65,.78,.6]},
+  {name:'兔子',alias:'小兔',color:'#f3e7d6',light:'#fff8e8',type:'rabbit',sprite:1,face:[.5,.7,.78,.54]},
+  {name:'小熊',alias:'小熊',color:'#c0936d',light:'#ead8be',type:'bear',sprite:2,face:[.5,.56,.84,.76]},
+  {name:'青蛙',alias:'呱呱',color:'#b6c780',light:'#ecedcb',type:'frog',sprite:3,face:[.5,.56,.9,.75]}
+];
+const artwork = {heads:null,busts:null};
+let previewAvatars = [0,1,2], selectedPreview = 0;
+function loadArtwork() {
+  for(const [key,path] of Object.entries({heads:'assets/animal-heads.png',busts:'assets/animal-busts.png'})) {
+    const img=new Image();artwork[key]=img;
+    img.onload=()=>{if(!stream)drawDemo(demoMode?performance.now()-demoStarted:0);};
+    img.onerror=()=>{log('角色素材加载失败：'+path);status('动物素材未能读取，请保持 assets 文件夹与网页放在一起。','error');};
+    img.src=path;
+  }
+}
+function spriteStyle(element,avatar) {
+  const index=avatars[avatar].sprite;
+  element.className+=' animal-sprite';element.style.setProperty('--sprite-x',(index%2)*100+'%');element.style.setProperty('--sprite-y',Math.floor(index/2)*100+'%');
+}
+const texts = {
+  forehead:['检测到扶额。','事情开始变得不对劲。','他这一扶额，让全宇宙的周一提前到来。'],
+  head:['检测到双手抱头。','系统检测到人生重大危机。','警报！主角精神值归零，世界即将重启！'],
+  turn:['检测到转头。','就在这一刻，他发现事情远没有想象中那么简单。','公元2026年，这个转头改变了人类文明。']
+};
+const actionNames = {forehead:'扶额',head:'双手抱头',turn:'转头'}, levels = ['普通','夸张','离谱'];
+let stream = null, face = null, pose = null, aiPromise = null;
+let loading = false, performing = false, demoMode = false, session = 0, raf = 0;
+let lastVideoTime = -1, lastInference = -Infinity, lastGlobalFire = -Infinity, clearTimer = 0;
+let tracks = [], nextId = 1, selectedId = null, defaultAvatar = 0, events = 0, audio = null;
+let demoStarted = 0, demoStep = -1, lastRoster = '', lastDemoFrame = 0;
+const lines = [];
+function log(message) { lines.push(new Date().toLocaleTimeString()+' '+message); if(lines.length>50) lines.shift(); $('logs').textContent=lines.join('\n'); }
+function status(message,kind='') { $('status').textContent=message; $('status').className='status '+kind; log(message); }
+function errorText(error) {
+  const tips={NotAllowedError:'请在地址栏和系统设置中允许摄像头。',NotFoundError:'未找到摄像头。',NotReadableError:'请检查摄像头是否被其他程序占用。',OverconstrainedError:'摄像头不支持当前参数。'};
+  return (tips[error?.name] || error?.message || String(error));
+}
+function setButtons() {
+  $('start').disabled=loading || performing && !demoMode;
+  $('startLabel').textContent=loading?'正在准备片场…':performing&&!demoMode?'正在加戏':'开始加戏';
+  $('cameraTest').disabled=loading || !!stream;
+  $('cameraLabel').textContent=stream?'摄像头已连接':'开启摄像头';
+  $('stop').disabled=!stream&&!demoMode&&!loading;
+  $('demo').disabled=loading||!!stream;
+  $('demo').textContent=demoMode?'退出示例 ↗':'播放加戏示例 ↗';
+}
+function updateLevel() {
+  const level=+$('level').value;
+  $('levelName').textContent=levels[level]; $('level').setAttribute('aria-valuetext',levels[level]);
+  $('levelExample').textContent=texts.turn[level];
+  [...$('levelLabels').children].forEach((el,i)=>el.classList.toggle('current',i===level));
+}
+function currentAvatar() { return tracks.find(t=>t.id===selectedId)?.avatar ?? previewAvatars[selectedPreview]; }
+function renderAvatars() {
+  const selected=currentAvatar(); $('avatarOptions').replaceChildren();
+  avatars.forEach((a,i)=>{
+    const button=document.createElement('button'); button.type='button';button.className='avatar-option';button.setAttribute('aria-pressed',String(i===selected));
+    const icon=document.createElement('span');icon.className='animal';spriteStyle(icon,i);icon.setAttribute('aria-hidden','true');
+    button.append(icon,document.createTextNode(a.name));button.addEventListener('click',()=>{
+      const track=tracks.find(t=>t.id===selectedId);
+      if(track) track.avatar=i; else {previewAvatars[selectedPreview]=i;if(selectedPreview===0)defaultAvatar=i;}
+      renderAvatars();renderPlayers(true); if(!stream&&!demoMode) drawDemo(0);
+    });$('avatarOptions').append(button);
+  });
+  $('avatarNote').textContent=selectedId===null?'正在选择示意角色 · '+avatars[previewAvatars[selectedPreview]].alias:`正在为 ${playerName(selectedId)} 更换形象`;
+}
+function playerName(id) { return '演员 '+String(id).padStart(2,'0'); }
+function renderPlayers(force=false) {
+  const signature=tracks.map(t=>[t.id,t.avatar,t.visible,t.action]).join('|')+';'+selectedId+';'+demoMode+';'+previewAvatars+';'+selectedPreview+';'+!!stream+';'+loading;
+  if(!force&&signature===lastRoster)return;lastRoster=signature;
+  $('players').replaceChildren();const ordered=[...tracks].sort((a,b)=>a.id-b.id),preview=!tracks.length&&!stream;
+  for(let i=0;i<MAX_PLAYERS;i++) {
+    const t=ordered[i],sample=preview&&i<3,avatar=t?.avatar??previewAvatars[i],selected=t?selectedId===t.id:sample&&selectedPreview===i;
+    const button=document.createElement('button');button.type='button';button.className='player'+(t||sample?' active':' empty')+(selected?' selected':'');button.disabled=!t&&!sample;
+    const icon=document.createElement('span');icon.className='player-icon';icon.setAttribute('aria-hidden','true');if(t||sample)spriteStyle(icon,avatar);else icon.textContent='+';
+    const text=document.createElement('span');text.className='player-text';const name=document.createElement('b'),detail=document.createElement('small');
+    name.textContent=t||sample?avatars[avatar].alias:'邀请好友入镜';detail.textContent=sample?'示意角色':t?(demoMode?'示意演员':!t.visible?'暂时离开':actionNames[t.action]||playerName(t.id)):'空位 '+(i+1);
+    text.append(name,detail);button.append(icon,text);
+    if(t||sample){button.setAttribute('aria-pressed',String(selected));button.addEventListener('click',()=>{if(t)selectedId=t.id;else{selectedId=null;selectedPreview=i;}renderPlayers(true);renderAvatars();});}
+    $('players').append(button);
+  }
+  const count=tracks.filter(t=>t.visible).length;
+  $('playerCount').textContent=(demoMode?'示意 · ':'')+count+' / '+MAX_PLAYERS+' 人入镜';
+}
+function ellipse(x,y,rx,ry,fill,stroke) {
+  ctx.beginPath();ctx.ellipse(x,y,Math.max(rx,.01),Math.max(ry,.01),0,0,Math.PI*2);if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2.8;ctx.stroke();}
+}
+// Fit the same 3D head assets used by the UI to each detected face.
+function drawAvatar(cx,cy,rx,ry,angle,avatar) {
+  const a=avatars[avatar],image=artwork.heads;
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(angle);
+  if(image?.complete&&image.naturalWidth) {
+    const cell=image.naturalWidth/2,[fx,fy,fw,fh]=a.face;
+    const width=rx*2.7/fw,height=ry*2.7/fh;
+    ctx.drawImage(image,(a.sprite%2)*cell,Math.floor(a.sprite/2)*cell,cell,cell,-width*fx,-height*fy,width,height);
+  } else {
+    const gradient=ctx.createRadialGradient(-rx*.4,-ry*.5,1,0,0,Math.max(rx,ry)*1.6);gradient.addColorStop(0,a.light);gradient.addColorStop(1,a.color);
+    ellipse(0,0,rx*1.6,ry*1.6,gradient);
+  }
+  ctx.restore();
+}
+function drawDemo(t) {
+  if(canvas.width!==1200||canvas.height!==660){canvas.width=1200;canvas.height=660;}
+  const w=1200,h=660;ctx.clearRect(0,0,w,h);
+  const gradient=ctx.createLinearGradient(0,0,w,h);gradient.addColorStop(0,'#c1d0ae');gradient.addColorStop(.5,'#e4e9ce');gradient.addColorStop(1,'#f4ebd1');ctx.fillStyle=gradient;ctx.fillRect(0,0,w,h);
+  ctx.save();ctx.filter='blur(20px)';ellipse(990,92,220,100,'#fff9d299');ellipse(800,150,140,90,'#fcf9d36b');ellipse(75,285,78,155,'#8aab6c88');ellipse(-8,365,75,95,'#70966499');ellipse(1140,470,95,170,'#b2c09366');ctx.restore();
+  ctx.save();ctx.translate(65,410);ctx.rotate(-.13);ctx.fillStyle='#728362';ctx.fillRect(-5,0,10,250);ctx.fillStyle='#6f795f';ctx.fillRect(-39,-55,78,85);ellipse(0,-15,39,49,'#9aa282');ellipse(0,-15,26,36,'#fff2bc');ctx.shadowColor='#fff1ae';ctx.shadowBlur=40;ellipse(0,-15,20,29,'#fff5c9');ctx.restore();
+  const positions=[205,600,995],image=artwork.busts;
+  for(const i of [0,2,1]){
+    const a=demoMode?tracks[i]?.avatar??previewAvatars[i]:previewAvatars[i],bob=demoMode?Math.sin(t/1000+i*2)*5:0;
+    if(image?.complete&&image.naturalWidth){const cell=image.naturalWidth/2,size=570;ctx.drawImage(image,(a%2)*cell,Math.floor(a/2)*cell,cell,cell,positions[i]-size/2,95+bob,size,size);}
+    else drawAvatar(positions[i],380,103,122,0,a);
+  }
+  positions.forEach((x,i)=>{const avatar=demoMode?tracks[i]?.avatar??previewAvatars[i]:previewAvatars[i];ctx.font='500 17px "Microsoft YaHei", sans-serif';ctx.textAlign='center';ctx.fillStyle='#536a3ddd';ctx.beginPath();ctx.roundRect(x-56,h-45,112,30,15);ctx.fill();ctx.fillStyle='#fffced';ctx.fillText(avatars[avatar].alias+' · 示意',x,h-24);});
+  ctx.save();ctx.translate(1080,105);ctx.rotate(.15);ctx.strokeStyle='#fff8df';ctx.lineWidth=11;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-18,-15);ctx.lineTo(15,17);ctx.moveTo(13,-20);ctx.lineTo(-13,21);ctx.stroke();ctx.strokeStyle='#ffa03a';ctx.lineWidth=6;ctx.stroke();ctx.restore();
+}
+function distance(a,b) { return Math.hypot(a.x-b.x,a.y-b.y); }
+function faceObservation(points) {
+  if(!points?.length) return null;
+  const xs=points.map(p=>p.x),ys=points.map(p=>p.y),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const left=points[33],right=points[263],top=points[10],chin=points[152];
+  return {x:(minX+maxX)/2,y:(minY+maxY)/2,rx:Math.max((maxX-minX)/2,.015),ry:Math.max((maxY-minY)/2,.02),angle:Math.atan2((right.y-left.y)*video.videoHeight,(right.x-left.x)*video.videoWidth),points,pose:null,top,chin};
+}
+function poseHead(points) {
+  if(!points?.[0]||(points[0].visibility??1)<.45) return null;
+  const visible=points.slice(0,11).filter(p=>(p.visibility??1)>.45),nose=points[0];
+  const spread=visible.length>1?Math.max(...visible.map(p=>p.x))-Math.min(...visible.map(p=>p.x)):0;
+  const shoulder=points[11]&&points[12]?distance(points[11],points[12]):.15;
+  return {x:nose.x,y:nose.y-.015,rx:Math.max(spread*.72,shoulder*.27,.04),ry:Math.max(spread*.95,shoulder*.35,.055),angle:0,points:null,pose:points};
+}
+// Match the two independent model outputs by head position, never by array index.
+function observationsFor(faces,poses) {
+  const observations=faces.map(faceObservation).filter(Boolean),heads=poses.map(p=>({head:poseHead(p),pose:p})).filter(p=>p.head);
+  const pairs=[];observations.forEach((o,i)=>heads.forEach((h,j)=>{const d=distance(o,h.head),gate=Math.max(o.rx*2.8,h.head.rx*2.4,.07);if(d<gate)pairs.push({i,j,d:d/gate});}));
+  pairs.sort((a,b)=>a.d-b.d);const faceUsed=new Set(),poseUsed=new Set();
+  for(const {i,j} of pairs)if(!faceUsed.has(i)&&!poseUsed.has(j)){observations[i].pose=heads[j].pose;faceUsed.add(i);poseUsed.add(j);}
+  heads.forEach((h,j)=>{if(!poseUsed.has(j))observations.push(h.head);});return observations;
+}
+function newTrack(o,t) {
+  const id=nextId++;
+  return {id,avatar:(defaultAvatar+id-1)%avatars.length,x:o.x,y:o.y,rx:o.rx,ry:o.ry,angle:o.angle,lastSeen:t,visible:true,stable:null,stableSince:t,armed:true,lastFire:-Infinity,action:null,observation:o};
+}
+function updateTracks(observations,t) {
+  // Disappearance expires after 1.2 s; no biometric identity recognition is used.
+  tracks=tracks.filter(track=>t-track.lastSeen<1200);tracks.forEach(track=>{track.visible=false;track.observation=null;track.action=null;});
+  const candidates=[];tracks.forEach((track,i)=>observations.forEach((o,j)=>{
+    const gate=Math.max(.085,Math.min(.23,Math.max(track.rx,o.rx)*2.6));const d=distance(track,o);
+    if(d<gate)candidates.push({i,j,cost:d/gate+Math.abs(Math.log(o.rx/track.rx))*.15});
+  }));candidates.sort((a,b)=>a.cost-b.cost);
+  const usedTracks=new Set(),usedObs=new Set();
+  for(const {i,j} of candidates){if(usedTracks.has(i)||usedObs.has(j))continue;
+    const track=tracks[i],o=observations[j];Object.assign(track,{x:o.x,y:o.y,rx:o.rx,ry:o.ry,angle:o.angle,lastSeen:t,visible:true,observation:o});usedTracks.add(i);usedObs.add(j);
+  }
+  observations.forEach((o,j)=>{if(!usedObs.has(j)&&tracks.length<MAX_PLAYERS){tracks.push(newTrack(o,t));usedObs.add(j);}});
+  // Unassigned detections still receive anonymous masks, even if the four player slots are full.
+  if(!tracks.some(track=>track.id===selectedId)){selectedId=tracks[0]?.id??null;renderAvatars();}
+  return observations.filter((o,j)=>!usedObs.has(j));
+}
+function detect(p,f) {
+  if(p&&[0,11,12].every(i=>p[i]&&(p[i].visibility??1)>.48)){
+    const [nose,ls,rs]=[p[0],p[11],p[12]],shoulder=distance(ls,rs);
+    if(shoulder>.06){const near=w=>w&&(w.visibility??1)>.48&&distance(w,nose)<shoulder*.66&&w.y<Math.max(ls.y,rs.y)+shoulder*.2;
+      if(near(p[15])&&near(p[16]))return 'head';if(near(p[15])||near(p[16]))return 'forehead';}
+  }
+  if(f?.[33]&&f?.[263]&&f?.[1]){const left=f[33],right=f[263],tip=f[1],eye=distance(left,right);
+    if(eye>.025){const projection=((tip.x-left.x)*(right.x-left.x)+(tip.y-left.y)*(right.y-left.y))/(eye*eye);if(Math.abs(projection-.5)>.25)return 'turn';}}
+  return null;
+}
+function processActions(t) {
+  for(const track of tracks){
+    if(!track.visible){track.stable=null;track.stableSince=t;continue;}
+    const action=detect(track.observation?.pose,track.observation?.points);track.action=action;
+    if(action!==track.stable){track.stable=action;track.stableSince=t;}
+    if(!action&&t-track.stableSince>=300)track.armed=true;
+    if(performing&&action&&track.armed&&t-track.stableSince>=240&&t-track.lastFire>=2200&&t-lastGlobalFire>=1700){fire(action,track,t);track.armed=false;}
+  }
+}
+function renderCamera(observations,extras) {
+  const w=frame.width,h=frame.height;if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+  ctx.save();ctx.clearRect(0,0,w,h);ctx.translate(w,0);ctx.scale(-1,1);
+  // Unknown/no head positions: blur the complete frame instead of exposing a raw preview.
+  if(!observations.length)ctx.filter='blur(28px)';ctx.drawImage(frame,0,0,w,h);ctx.filter='none';
+  const mask=(o,avatar)=>{ellipse(o.x*w,o.y*h,o.rx*w*1.55,o.ry*h*1.55,avatars[avatar].color);drawAvatar(o.x*w,o.y*h,o.rx*w*1.08,o.ry*h*1.08,o.angle,avatar);};
+  for(const track of tracks.filter(p=>p.visible))mask(track.observation,track.avatar);
+  for(const o of extras)mask(o,0);
+  ctx.restore();
+  for(const track of tracks.filter(p=>p.visible)){
+    const x=Math.max(60,Math.min(w-60,(1-track.x)*w)),y=Math.min(h-18,(track.y+track.ry*1.8)*h+12);
+    ctx.font=`600 ${Math.max(12,w/65)}px sans-serif`;ctx.textAlign='center';const label=playerName(track.id),width=ctx.measureText(label).width+20;
+    ctx.fillStyle='#1c3025dd';ctx.fillRect(x-width/2,y-17,width,26);ctx.fillStyle='#fff6da';ctx.fillText(label,x,y+1);
+  }
+  $('stageHint').textContent=observations.length?'卡通遮脸中 · 身体动作保留': '未定位到头部 · 暂时模糊画面';
+}
+function primeAudio() {
+  if(!$('soundEnabled').checked)return;
+  try{const Audio=window.AudioContext||window.webkitAudioContext;if(Audio){audio??=new Audio();audio.resume().catch(()=>{});}}catch(e){log('音频初始化：'+errorText(e));}
+}
+function sound(action) {
+  if(!$('soundEnabled').checked||!audio||audio.state!=='running')return;
+  const now=audio.currentTime,notes=action==='head'?[220,165,110]:action==='forehead'?[196,174,146]:[330,440,554];
+  notes.forEach((freq,i)=>{const oscillator=audio.createOscillator(),gain=audio.createGain();oscillator.type='triangle';oscillator.frequency.value=freq;gain.gain.setValueAtTime(.0001,now+i*.13);gain.gain.exponentialRampToValueAtTime(.08,now+i*.13+.02);gain.gain.exponentialRampToValueAtTime(.0001,now+i*.13+.4);oscillator.connect(gain);gain.connect(audio.destination);oscillator.start(now+i*.13);oscillator.stop(now+i*.13+.42);oscillator.onended=()=>{oscillator.disconnect();gain.disconnect();};});
+}
+function fire(action,track,t) {
+  track.lastFire=t;lastGlobalFire=t;events++;const level=+$('level').value,line=texts[action][level];
+  $('subtitleText').textContent=playerName(track.id)+' · '+line;$('subtitle').classList.add('visible');
+  $('overlay').className='overlay '+({forehead:'gray',head:'flash',turn:'warm'}[action]);
+  $('stage').classList.remove('shake');void $('stage').offsetWidth;$('stage').classList.add('shake');sound(action);
+  const li=document.createElement('li');li.className='history-entry';const time=document.createElement('time'),who=document.createElement('b'),text=document.createElement('p');
+  time.textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false});who.textContent=(demoMode?'示意 · ':'')+playerName(track.id)+' / '+actionNames[action];if(demoMode)who.className='demo-label';text.textContent=line;li.append(time,who,text);
+  if(!events||$('history').querySelector('.empty-history'))$('history').replaceChildren();$('history').prepend(li);while($('history').children.length>40)$('history').lastChild.remove();
+  $('eventCount').textContent=events+' 次加戏';clearTimeout(clearTimer);clearTimer=setTimeout(clearEffect,2600);
+}
+function clearEffect() { $('subtitle').classList.remove('visible');$('subtitleText').textContent='';$('overlay').className='overlay';$('stage').classList.remove('shake'); }
+async function makeDetector(Class,vision,path,options,label) {
+  for(const delegate of ['GPU','CPU']){try{if(loading)status('正在准备'+label+'（'+delegate+'）…');const detector=await Class.createFromOptions(vision,{baseOptions:{modelAssetPath:path,delegate},runningMode:'VIDEO',...options});log(label+' '+delegate+' 已就绪');return detector;}catch(e){log(label+' '+delegate+' 失败：'+errorText(e));}}
+  return null;
+}
+async function loadAI() {
+  if(face&&pose)return;if(aiPromise)return aiPromise;
+  aiPromise=(async()=>{
+    const sources=['https://cdn.jsdelivr.net/npm','https://unpkg.com'];const base='https://storage.googleapis.com/mediapipe-models/';
+    for(const source of sources){try{
+      if(loading)status('正在下载识别模型，首次加载需要一些时间…');const root=source+'/@mediapipe/tasks-vision@'+AI_VERSION;
+      const mod=await import(root+'/vision_bundle.mjs'),lib=mod.FaceLandmarker?mod:mod.default;
+      const vision=await lib.FilesetResolver.forVisionTasks(root+'/wasm');
+      if(!face)face=await makeDetector(lib.FaceLandmarker,vision,base+'face_landmarker/face_landmarker/float16/1/face_landmarker.task',{numFaces:8,minFaceDetectionConfidence:.5,minFacePresenceConfidence:.5,minTrackingConfidence:.5},'多人脸部模型');
+      if(!face)throw new Error('脸部模型加载失败，无法启动卡通遮脸。请检查网络能否访问模型地址。');
+      if(!pose)pose=await makeDetector(lib.PoseLandmarker,vision,base+'pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',{numPoses:MAX_PLAYERS,minPoseDetectionConfidence:.5,minPosePresenceConfidence:.5,minTrackingConfidence:.5},'多人动作模型');
+      if(pose)return;
+    }catch(e){log('模型来源 '+source+' 失败：'+errorText(e));}}
+    if(!face)throw new Error('卡通遮脸模型未能加载。请展开诊断检查网络后重试。');
+    log('姿态模型不可用，将只识别转头。');
+  })();try{await aiPromise;}finally{aiPromise=null;}
+}
+function closeCamera() { if(stream)stream.getTracks().forEach(track=>track.stop());stream=null;video.pause();video.srcObject=null; }
+async function openCamera(token) {
+  if(stream?.active)return true;
+  if(!window.isSecureContext)throw new Error('摄像头需要 HTTPS 或 localhost。请通过本地服务器或 HTTPS 网站打开。');
+  if(!navigator.mediaDevices?.getUserMedia)throw new Error('当前浏览器不支持摄像头，请使用 Chrome、Edge 或 Safari。');
+  status('请允许摄像头权限。模型就绪后才会显示处理后的画面。');
+  const acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:960},height:{ideal:600}},audio:false});
+  if(token!==session){acquired.getTracks().forEach(track=>track.stop());return false;}
+  stream=acquired;video.srcObject=acquired;
+  acquired.getVideoTracks().forEach(track=>track.addEventListener('ended',()=>{if(stream===acquired){stop();status('摄像头连接已中断，请重新开启。','error');}}));
+  await video.play();if(token!==session)return false;return true;
+}
+function loop() {
+  if(!stream||demoMode)return;
+  try{
+    const t=performance.now();
+    if(video.readyState>=2&&video.videoWidth>0&&video.currentTime!==lastVideoTime&&t-lastInference>=100){
+      lastInference=t;lastVideoTime=video.currentTime;
+      if(frame.width!==video.videoWidth||frame.height!==video.videoHeight){frame.width=video.videoWidth;frame.height=video.videoHeight;}
+      // Snapshot once, then infer and render that SAME frame to avoid mask/frame drift.
+      frameCtx.drawImage(video,0,0,frame.width,frame.height);
+      const started=performance.now(),fr=face.detectForVideo(frame,t),pr=pose?.detectForVideo(frame,t);
+      const observations=observationsFor(fr.faceLandmarks||[],pr?.landmarks||[]),extras=updateTracks(observations,t);
+      processActions(t);renderCamera(observations,extras);renderPlayers();
+      $('performance').textContent='识别 '+Math.round(performance.now()-started)+' ms / 帧';
+      $('tag').textContent=(performing?'正在加戏':'摄像头预览')+' · '+tracks.filter(p=>p.visible).length+' 人入镜';
+      $('maskBadge').textContent=extras.length?'✦ 超出席位 · 仍遮盖已检测头部':'✦ 卡通遮脸已开启';
+    }
+  }catch(e){cancelAnimationFrame(raf);closeCamera();performing=false;ctx.clearRect(0,0,canvas.width,canvas.height);drawDemo(0);$('placeholder').hidden=false;$('tag').textContent='识别已停止';$('maskBadge').textContent='✦ 等待重新连接';tracks=[];selectedId=null;renderPlayers(true);renderAvatars();clearEffect();status('识别中断，摄像头已关闭。'+errorText(e),'error');$('diagnostic').open=true;setButtons();return;}
+  raf=requestAnimationFrame(loop);
+}
+async function connect(perform) {
+  if(loading||performing&&!demoMode)return;primeAudio();
+  if(demoMode){stop();primeAudio();}
+  if(stream&&face&&!loading){performing=perform;setButtons();status('正在加戏 · 试试扶额、抱头或转头。','ok');return;}
+  const token=++session;loading=true;setButtons();$('tag').textContent='片场准备中';$('placeholder').querySelector('h2').textContent='正在准备片场…';
+  try{
+    if(!await openCamera(token))return;if(token!==session)return;
+    await loadAI();if(token!==session||!stream)return;
+    performing=perform;lastVideoTime=-1;lastInference=-Infinity;lastGlobalFire=-Infinity;tracks=[];nextId=1;selectedId=null;
+    $('placeholder').hidden=true;status((perform?'正在加戏':'预览已开启')+(pose?' · 最多 4 人，试试扶额、抱头或转头。':' · 动作模型不可用，当前仅支持转头。'),'ok');loop();
+  }catch(e){if(token!==session)return;closeCamera();drawDemo(0);$('tag').textContent='连接失败 · 可重试';status('启动失败。'+errorText(e),'error');$('diagnostic').open=true;}
+  finally{if(token===session){loading=false;setButtons();}}
+}
+function stop() {
+  session++;cancelAnimationFrame(raf);clearTimeout(clearTimer);closeCamera();demoMode=false;performing=false;loading=false;tracks=[];selectedId=null;nextId=1;
+  clearEffect();$('placeholder').hidden=false;$('placeholder').querySelector('h2').textContent='开启摄像头，让大家一起入镜。';
+  $('tag').textContent='效果示意';$('maskBadge').textContent='卡通身份已准备';$('stageHint').textContent='示意角色 · 摄像头未开启';$('performance').textContent='卡通角色自动跟随';
+  if(audio){audio.suspend().catch(()=>{});}drawDemo(0);renderPlayers(true);renderAvatars();setButtons();status('本场已结束，摄像头已关闭。');
+}
+function demoLoop(t) {
+  if(!demoMode)return;
+  if(t-lastDemoFrame>50){drawDemo(t-demoStarted);lastDemoFrame=t;const step=Math.floor((t-demoStarted)/3400);
+    if(step!==demoStep){demoStep=step;tracks.forEach(p=>p.action=null);const track=tracks[step%tracks.length],action=['turn','forehead','head'][step%3];track.action=action;fire(action,track,t);renderPlayers();}}
+  raf=requestAnimationFrame(demoLoop);
+}
+function startDemo() {
+  if(demoMode){stop();return;}stop();primeAudio();demoMode=true;performing=true;demoStarted=performance.now();demoStep=-1;lastDemoFrame=0;
+  tracks=[0,1,2].map(i=>({...newTrack({x:.25+i*.25,y:.55,rx:.07,ry:.12,angle:0},demoStarted),avatar:previewAvatars[i]}));selectedId=tracks[0].id;
+  $('placeholder').hidden=true;$('tag').textContent='示意模式 · 非实时识别';$('maskBadge').textContent='✦ 卡通效果演示';$('stageHint').textContent='动画示意 · 未开启摄像头';$('performance').textContent='自动轮播示例动作';
+  status('正在播放示意动画，未开启摄像头。点击“开始加戏”进入真实片场。');renderPlayers(true);renderAvatars();setButtons();demoLoop(demoStarted);
+}
+$('start').addEventListener('click',()=>connect(true));$('cameraTest').addEventListener('click',()=>connect(false));$('stop').addEventListener('click',stop);$('demo').addEventListener('click',startDemo);$('level').addEventListener('input',updateLevel);
+$('soundEnabled').addEventListener('change',()=>{if($('soundEnabled').checked)primeAudio();});
+$('copyLog').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('env').textContent+'\n'+lines.join('\n'));$('copyLog').textContent='已复制';}catch(e){$('copyLog').textContent='请手动选择上方日志复制';}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&(stream||loading||demoMode)){stop();status('页面已切到后台，摄像头已关闭。需要时可重新开启。');}});
+window.addEventListener('pagehide',()=>{session++;loading=false;performing=false;demoMode=false;cancelAnimationFrame(raf);closeCamera();});
+$('env').textContent=`网页 ${APP_BUILD} · MediaPipe ${AI_VERSION}\n地址 ${location.href}\n安全上下文 ${window.isSecureContext?'是':'否'}\n浏览器 ${navigator.userAgent}`;
+loadArtwork();renderAvatars();renderPlayers(true);updateLevel();drawDemo(0);setButtons();log('页面已就绪。最大演员数 '+MAX_PLAYERS+'；原始视频元素隐藏。');
+</script>
+</body>
+</html>
