@@ -1,0 +1,14 @@
+{
+  "name": "Orange Girl — Rain derivative test v1",
+  "source": "https://studio.blender.org/characters/rain/v3/",
+  "credit": "Rain Rig (CC) Blender Foundation | studio.blender.org",
+  "license": "CC-BY-4.0",
+  "changes": [
+    "Rain face topology, portable expressions, hands, shoes and body skin retained",
+    "New cap, shoulder-length curls, hood, sleeves and drawstrings",
+    "Existing Rain trouser and top meshes refitted; new skin and clothing colors"
+  ],
+  "bones": 21,
+  "bytes": 7198720,
+  "status": "Test asset; custom sculpt and garment fitting still require review against supplied design."
+}

@@ -1,0 +1,26 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>九个动作的合成摄像头检查</title>
+<style>body{margin:0;background:#f8f5eb;font:14px/1.6 system-ui}header{padding:10px}button{margin:3px}iframe{width:100%;height:calc(100vh - 100px);border:0}</style>
+<header>合成摄像头测试，不调用真实摄像头。选择动作后，在下方点击“开始加戏”。<div id="actions"></div></header><iframe id="app" title="正式应用的九个动作检查"></iframe>
+<script type="module">
+import {ACTION_IDS} from '../action-poses.mjs';
+let source=await(await fetch('../index.html')).text();
+const setup=`
+ previewAvatars=[9,10,11];defaultAvatar=9;window.fixtureAction='forehead';
+ const fixtureCanvas=document.createElement('canvas');fixtureCanvas.width=1280;fixtureCanvas.height=720;
+ const fixtureContext=fixtureCanvas.getContext('2d');fixtureContext.fillStyle='#e4ebdc';fixtureContext.fillRect(0,0,1280,720);fixtureContext.fillStyle='#435b31';fixtureContext.font='36px system-ui';fixtureContext.fillText('SYNTHETIC CAMERA',400,350);
+ setInterval(()=>{fixtureContext.fillStyle='#e4ebdc';fixtureContext.fillRect(0,600,1280,120);fixtureContext.fillStyle='#435b31';fixtureContext.fillText(String(performance.now()),400,650);},100);
+ navigator.mediaDevices.getUserMedia=async()=>fixtureCanvas.captureStream(10);
+ window.setFixtureAction=value=>{window.fixtureAction=value;for(const actor of tracks){actor.armed=true;actor.stable=null;actor.stableSince=performance.now();actor.lastFire=-Infinity;actor.waveState=undefined;actor.waveUntil=0;actor.waveMovingUntil=0;}lastGlobalFire=-Infinity;};
+ async function loadAI(){
+  const [{actionObservation},T]=await Promise.all([import('./action-poses.mjs'),import('./vendor/three.module.js')]);
+  const sample=()=>actionObservation(window.fixtureAction,performance.now()/1000);
+  face={detectForVideo(){const o=sample(),r=o.rotation,matrix=new T.Matrix4().makeRotationFromEuler(new T.Euler(r.pitch,r.yaw,r.roll,'YXZ'));
+   return {faceLandmarks:[o.points.map(p=>({...p,x:.5+(p.x-.5)*.3,y:.20+(p.y-.4)*.3*1280/720}))],facialTransformationMatrixes:[{data:matrix.toArray()}],faceBlendshapes:[{categories:o.blendshapes}]};
+  }};
+  pose={detectForVideo(){const o=sample();return {landmarks:[o.worldPose.map(p=>({...p,x:.5+p.x*.26,y:.5+p.y*.26*1280/720}))],worldLandmarks:[o.worldPose]};}};
+ }
+`;
+source=source.replace('<head>','<head><base href="../">').replace('renderActionGuide();loadArtwork();',setup+'\nrenderActionGuide();loadArtwork();');
+document.getElementById('app').srcdoc=source;
+for(const action of ACTION_IDS){const button=document.createElement('button');button.textContent=action;button.onclick=()=>document.getElementById('app').contentWindow.setFixtureAction?.(action);document.getElementById('actions').append(button);}
+</script></html>

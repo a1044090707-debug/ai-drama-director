@@ -1,0 +1,108 @@
+{
+  "triangles": 62512,
+  "vertices": 37234,
+  "bones": [
+    {
+      "name": "Root",
+      "parent": null
+    },
+    {
+      "name": "Hips",
+      "parent": "Root"
+    },
+    {
+      "name": "Spine",
+      "parent": "Hips"
+    },
+    {
+      "name": "Chest",
+      "parent": "Spine"
+    },
+    {
+      "name": "Neck",
+      "parent": "Chest"
+    },
+    {
+      "name": "Head",
+      "parent": "Neck"
+    },
+    {
+      "name": "LeftShoulder",
+      "parent": "Chest"
+    },
+    {
+      "name": "LeftUpperArm",
+      "parent": "LeftShoulder"
+    },
+    {
+      "name": "LeftForeArm",
+      "parent": "LeftUpperArm"
+    },
+    {
+      "name": "LeftHand",
+      "parent": "LeftForeArm"
+    },
+    {
+      "name": "LeftUpperLeg",
+      "parent": "Hips"
+    },
+    {
+      "name": "LeftLowerLeg",
+      "parent": "LeftUpperLeg"
+    },
+    {
+      "name": "LeftFoot",
+      "parent": "LeftLowerLeg"
+    },
+    {
+      "name": "LeftToe",
+      "parent": "LeftFoot"
+    },
+    {
+      "name": "RightShoulder",
+      "parent": "Chest"
+    },
+    {
+      "name": "RightUpperArm",
+      "parent": "RightShoulder"
+    },
+    {
+      "name": "RightForeArm",
+      "parent": "RightUpperArm"
+    },
+    {
+      "name": "RightHand",
+      "parent": "RightForeArm"
+    },
+    {
+      "name": "RightUpperLeg",
+      "parent": "Hips"
+    },
+    {
+      "name": "RightLowerLeg",
+      "parent": "RightUpperLeg"
+    },
+    {
+      "name": "RightFoot",
+      "parent": "RightLowerLeg"
+    },
+    {
+      "name": "RightToe",
+      "parent": "RightFoot"
+    }
+  ],
+  "drawCalls": 26,
+  "morphTargets": [
+    "jawOpen",
+    "eyeBlinkLeft",
+    "eyeBlinkRight",
+    "mouthSmile"
+  ],
+  "style": "orange cap, wavy chestnut hair, sage hoodie, dark trousers, cream sneakers",
+  "geometry": "parametric full-body skin; no reference-image color projection",
+  "limitations": [
+    "Simplified stylized face and hair; does not reproduce every detail of the reconstructed sculpt.",
+    "Camera tracking estimates ankle and foot direction; individual toe articulation is not measured.",
+    "Real-person multi-player performance must be measured on the target device."
+  ]
+}

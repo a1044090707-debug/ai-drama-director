@@ -1,0 +1,26 @@
+{
+  "method": "region-constrained multiview reference vertex colors",
+  "geometry": "orange-girl-shape.glb",
+  "geometry_sha256": "24a2a35a644c21f03806ae20d3c784ec1c84c1c84dced494c40dd03c1b0c3b79",
+  "geometry_unchanged": true,
+  "vertices": 283663,
+  "faces": 567562,
+  "hair_vertices_reclassified": 912,
+  "green_hair_vertices_recolored": 816,
+  "skin_vertices_recolored": 6714,
+  "jaw_transition_vertices": 6714,
+  "region_counts": {
+    "hair": 111926,
+    "skin": 29595,
+    "cloth": 86693,
+    "cap": 55449
+  },
+  "left_side": "mirrored right reference",
+  "calibration": "chin landmarks and curl envelope calibrated for this mesh only",
+  "limits": [
+    "illustration projection, not a PBR texture bake",
+    "thin curl and ear boundaries still have projection artifacts",
+    "model-specific calibration is not a general segmentation method",
+    "no rig or expression deformation"
+  ]
+}

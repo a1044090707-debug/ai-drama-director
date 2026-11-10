@@ -1,0 +1,38 @@
+{
+  "model": "tencent/Hunyuan3D-2mv",
+  "stage": "untextured foundation mesh",
+  "seed": 12345,
+  "steps": 30,
+  "diffusion_seconds": 708.8,
+  "resolution": 256,
+  "export_seconds": 270.0,
+  "vertices": 283663,
+  "faces": 567562,
+  "bounds": [
+    [
+      -0.758234405415375,
+      -0.9981094497387072,
+      -0.6602265350293073
+    ],
+    [
+      0.7505468138559644,
+      0.9890828793908348,
+      0.6543491338740844
+    ]
+  ],
+  "torch": "2.5.1+cu118",
+  "dtype": "float32",
+  "gpu": "NVIDIA TITAN X (Pascal)",
+  "resumed_from_saved_latent": true,
+  "source_repository_commit": "f8db63096c8282cb27354314d896feba5ba6ff8a",
+  "raw_vertices": 284361,
+  "raw_faces": 568806,
+  "discarded_small_components": 38,
+  "postprocessing": {
+    "minimum_component_faces": 100,
+    "smoothing": "Taubin",
+    "iterations": 8,
+    "lambda": 0.5,
+    "nu": 0.53
+  }
+}

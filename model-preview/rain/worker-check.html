@@ -1,0 +1,12 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>识别线程检查</title><h1>无摄像头识别检查</h1><pre id="status">正在初始化识别线程…</pre><script type="module">
+const status=document.querySelector('#status'),worker=new Worker('../fullbody/tracking-worker.mjs');
+const timer=setTimeout(()=>{status.textContent='FAIL: initialization timeout';worker.terminate();},120000);
+worker.onerror=e=>{status.textContent='FAIL: '+e.message;clearTimeout(timer);};
+worker.onmessage=async({data:d})=>{
+  if(d.type==='status')status.textContent=d.message;
+  if(d.type==='ready'){const canvas=new OffscreenCanvas(640,480);canvas.getContext('2d').fillRect(0,0,640,480);const image=canvas.transferToImageBitmap();worker.postMessage({type:'frame',image,time:1000},[image]);}
+  if(d.type==='error'||d.type==='frame-error'){status.textContent='FAIL: '+d.message;clearTimeout(timer);worker.terminate();}
+  if(d.type==='result'){status.textContent=JSON.stringify({result:'PASS',faces:d.faces.length,poses:d.poses.length,ms:d.ms},null,2);clearTimeout(timer);worker.terminate();}
+};worker.postMessage({type:'init',players:1});
+</script></html>
+

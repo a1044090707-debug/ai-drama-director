@@ -1,0 +1,55 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>八位人物九个动作检查</title>
+<style>body{margin:20px;background:#f8f5eb;color:#435b31;font:15px/1.7 system-ui}pre{white-space:pre-wrap}canvas{display:block;width:100%;max-width:1500px;background:#e7ebdc}</style>
+<h1>八位人物与九个动作逐项检查</h1><p>合成关键点测试。检查动作分类、角色关节和嘴部形变，不申请真实摄像头。</p><pre id="result">正在检查…</pre><canvas id="mouths" width="1800" height="1000"></canvas>
+<script src="../motion.js"></script><script type="module">
+import * as T from '../vendor/three.module.js';
+import {createCharacterAvatar,HUMAN_MODELS} from '../character-models.mjs';
+import {createAvatarRenderer} from '../avatar3d.js';
+import {AvatarDriver} from '../model-preview/fullbody/driver.mjs';
+import {ACTION_IDS,actionObservation} from '../action-poses.mjs';
+const out=document.getElementById('result'),results=[],details=[];
+const assert=(ok,message)=>{if(!ok)throw new Error(message);results.push('PASS '+message);out.textContent=results.join('\n');};
+const pos=(a,name)=>a.bones[name].getWorldPosition(new T.Vector3());
+const contact=(a,side,action)=>{
+ const p=action==='forehead'?a.handContacts.forehead:a.handContacts.side,point=new T.Vector3(action==='head'?p[0]*(side==='Left'?1:-1):p[0],p[1],p[2]);
+ return point.sub(a.rest.Head).applyQuaternion(a.restWorldQuaternions.Head.clone().invert()).applyQuaternion(a.bones.Head.getWorldQuaternion(new T.Quaternion())).add(pos(a,'Head'));
+};
+try{
+ for(const model of HUMAN_MODELS){
+  const a=await createCharacterAvatar(model.index);
+  for(const action of ACTION_IDS){
+   a.demo('stand');a.expression();const driver=new AvatarDriver(a),track={observation:{aspect:1}},samples=[],detected=new Set();
+   const count=action==='wave'?52:16;
+   for(let i=0;i<count;i++){
+    const o=actionObservation(action,i*.033);const label=Motion.classify(o.pose,o.points,track,i*33);detected.add(label);
+    driver.update({worldLandmarks:o.worldPose,landmarks:o.pose,headRotation:o.rotation,blendshapes:o.blendshapes,action:label},i*33);driver.frame(.033,i*33);samples.push(pos(a,'LeftHand'));
+   }
+   assert(detected.has(action),model.name+' / '+Motion.actions[action].name+' 能被识别');
+   const shoulder=pos(a,'LeftUpperArm'),left=pos(a,'LeftHand'),right=pos(a,'RightHand'),head=pos(a,'Head');let ok=false;
+   if(action==='forehead')ok=left.distanceTo(contact(a,'Left',action))<.09;
+   if(action==='head')ok=left.distanceTo(contact(a,'Left',action))<.09&&right.distanceTo(contact(a,'Right',action))<.09;
+   if(action==='raise')ok=left.y>head.y+.12&&right.y<head.y-.20;
+   if(action==='handsup')ok=left.y>head.y+.12&&right.y>head.y+.12;
+   if(action==='arms')ok=left.distanceTo(right)>pos(a,'LeftUpperArm').distanceTo(pos(a,'RightUpperArm'))*2&&Math.abs(left.y-shoulder.y)<.20;
+   if(action==='wave')ok=Math.max(...samples.map(p=>p.x))-Math.min(...samples.map(p=>p.x))>.06&&left.y>shoulder.y;
+   if(action==='turn'||action==='tilt'){
+    const q=a.bones.Head.getWorldQuaternion(new T.Quaternion()).multiply(a.restWorldQuaternions.Head.clone().invert()),e=new T.Euler().setFromQuaternion(q,'YXZ');ok=action==='turn'?Math.abs(e.y)>.45:Math.abs(e.z)>.30;
+   }
+   if(action==='mouth'){
+    const meshes=a.morphMeshes.filter(m=>m.morphTargetDictionary?.jawOpen!==undefined);let moved=0;
+    for(const mesh of meshes){const delta=mesh.geometry.morphAttributes.position[mesh.morphTargetDictionary.jawOpen],relative=mesh.geometry.morphTargetsRelative,base=mesh.geometry.attributes.position;
+     const candidates=[];for(let i=0;i<base.count;i++){const d=new T.Vector3().fromBufferAttribute(delta,i);if(!relative)d.sub(new T.Vector3().fromBufferAttribute(base,i));if(d.length()>.003)candidates.push(i);}
+     const id=candidates[0];if(id!==undefined){const before=mesh.getVertexPosition(id,new T.Vector3());a.expression();const after=mesh.getVertexPosition(id,new T.Vector3());moved=Math.max(moved,before.distanceTo(after));a.expression({jawOpen:.9});}
+    }ok=driver.current.jawOpen>.85&&moved>.002;
+   }
+   details.push({model:model.name,action,ok,left:left.toArray(),head:head.toArray(),contact:action==='forehead'||action==='head'?contact(a,'Left',action).toArray():null,restHead:a.rest.Head.toArray(),restUpper:a.rest.LeftUpperArm.toArray(),restFore:a.rest.LeftForeArm.toArray(),restHand:a.rest.LeftHand.toArray()});assert(ok,model.name+' / '+Motion.actions[action].name+' 角色实际完成动作');
+  }a.dispose();
+ }
+ const renderer=await createAvatarRenderer({maxInstances:1}),canvas=document.getElementById('mouths'),ctx=canvas.getContext('2d');
+ for(let row=0;row<2;row++)for(let col=0;col<3;col++){
+  const item={id:'face-'+col,avatar:col+9,snap:true,demoAction:row?'mouth':undefined,demoPose:row?undefined:'stand',observation:{x:.5,y:.5,rotation:{yaw:0,pitch:0,roll:0}}};
+  let image;for(let n=0;n<10;n++)image=renderer.draw([item],600,500,1000+row*1000+n*33);
+  ctx.fillStyle='#e7ebdc';ctx.fillRect(col*600,row*500,600,500);ctx.drawImage(image,col*600,row*500);ctx.fillStyle='#435b31';ctx.font='24px system-ui';ctx.fillText(HUMAN_MODELS[col+5].name+' / '+(row?'张嘴':'闭嘴'),col*600+20,row*500+40);
+ }renderer.dispose();results.push('ALL PASS');out.textContent=results.join('\n');window.testResult={pass:true,checks:results.length-1,combinations:72,details};
+}catch(error){out.textContent+='\nFAIL '+error.stack;window.testResult={pass:false,error:String(error),details};}
+</script></html>

@@ -1,0 +1,35 @@
+{
+  "base": "Blender Studio Snow / W01 derivative",
+  "source": "https://studio.blender.org/characters/snow/v4/",
+  "credit": "Snow Rig (CC) Blender Foundation | studio.blender.org",
+  "license": "CC-BY-4.0",
+  "stage": "Fourth draft: slimmer face, restored big eyes, new swept fringe",
+  "edits": [
+    "Preserved v3 face height",
+    "Slimmer jaw and cheeks",
+    "Removed v3 local eye compression and neutral blink",
+    "Replaced original hair with head-skinned scalp shell and swept mesh locks"
+  ],
+  "views": [
+    "front full body",
+    "front facial close-up"
+  ],
+  "pose_bounds": {
+    "min": [
+      -0.37942492961883545,
+      -0.2099645733833313,
+      -0.003440219908952713
+    ],
+    "max": [
+      0.379425048828125,
+      0.10494761914014816,
+      1.7990615367889404
+    ]
+  },
+  "expression": {
+    "eyeBlinkLeft": 0,
+    "eyeBlinkRight": 0,
+    "mouthSmile": 0.15
+  },
+  "editable_scene": "gentle-draft-v4.blend"
+}

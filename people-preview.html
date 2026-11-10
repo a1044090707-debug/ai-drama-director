@@ -1,0 +1,17 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>人物角色形象预览</title><style>body{margin:0;padding:24px;background:#f8f5eb;color:#536b3c;font:14px "Microsoft YaHei",system-ui}main{max-width:1400px;margin:auto}canvas{display:block;width:100%;border-radius:22px;box-shadow:0 10px 40px #62704a15}p{line-height:1.8}a{color:#ce7a23}</style></head><body><main><canvas id="people" width="1800" height="1000"></canvas><p id="status">正在渲染人物模型…</p><a id="download" download="人物角色形象.png">下载人物形象图 PNG</a></main><script src="characters.js?v=11"></script><script type="module">
+import {createAvatarRenderer,HUMAN_MODELS} from './avatar3d.js?v=11';
+const canvas=document.getElementById('people'),ctx=canvas.getContext('2d');
+try{
+  const renderer=await createAvatarRenderer({maxInstances:1}),w=canvas.width,h=canvas.height;
+  const gradient=ctx.createLinearGradient(0,0,w,h);gradient.addColorStop(0,'#fbf7ed');gradient.addColorStop(1,'#e8efdc');ctx.fillStyle=gradient;ctx.fillRect(0,0,w,h);
+  ctx.textAlign='center';ctx.fillStyle='#435b31';ctx.font='bold 44px "Microsoft YaHei",sans-serif';ctx.fillText('人物角色形象',w/2,77);
+  ctx.fillStyle='#909d7c';ctx.font='21px "Microsoft YaHei",sans-serif';ctx.fillText('主页使用的八位完整 3D 人物 · 包含双腿、双脚与动作骨骼',w/2,119);
+  for(let row=0;row<2;row++){
+    const models=HUMAN_MODELS.slice(row*4,row*4+4),items=models.map((model,i)=>({id:'person-'+model.index,avatar:model.index,fullBody:true,slotCount:4,slotWidthUnits:1.9,stageX:(i+.5)/4,demoPose:'stand',observation:{rotation:{yaw:0,pitch:0,roll:0}}}));
+    const y=140+row*420;ctx.drawImage(renderer.draw(items,w,400),0,y);
+    models.forEach((model,i)=>{ctx.fillStyle='#536e3e';ctx.font='bold 25px "Microsoft YaHei",sans-serif';ctx.fillText(model.name,(i+.5)*w/4,y+400);});
+  }
+  document.getElementById('download').href=canvas.toDataURL('image/png');
+  document.getElementById('status').textContent='八款均由主页使用的实际 GLB 模型直接渲染。均支持前端九个动作，新增三款已补上张嘴形变。';renderer.dispose();
+}catch(e){document.getElementById('status').textContent='渲染失败：'+e.message;}
+</script></body></html>

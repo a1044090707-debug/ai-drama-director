@@ -1,0 +1,38 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>合成摄像头集成检查</title>
+<style>body{margin:0;font:14px system-ui;background:#fff8df}header{padding:10px}iframe{width:100%;height:calc(100vh - 65px);border:0}a{margin-left:20px}</style>
+<header>合成视频测试，不调用真实摄像头。<a href="?mode=landscape">横屏四人</a><a href="?mode=portrait">竖屏一人</a><span id="result"></span></header><iframe id="app" title="合成摄像头中的正式应用"></iframe>
+<script>
+(async()=>{
+  const params=new URLSearchParams(location.search),mode=params.get('mode')==='portrait'?'portrait':'landscape',imported=params.get('cast')==='imported';
+  let source=await(await fetch('../index.html')).text();
+  const setup=`
+    ${imported?'previewAvatars=[9,10,11];defaultAvatar=9;':''}
+    const fixturePortrait=${mode==='portrait'},fixtureCanvas=document.createElement('canvas'),fixtureCtx=fixtureCanvas.getContext('2d');
+    fixtureCanvas.width=fixturePortrait?720:1280;fixtureCanvas.height=fixturePortrait?1280:720;
+    const fixtureCount=fixturePortrait?1:4;
+    function drawFixture(){const w=fixtureCanvas.width,h=fixtureCanvas.height;fixtureCtx.fillStyle='#c8d5b3';fixtureCtx.fillRect(0,0,w,h);for(let i=0;i<fixtureCount;i++){const x=fixtureCount===1?.5:(i+.5)/fixtureCount;fixtureCtx.fillStyle=['#7b9963','#e4ac67','#9a927d','#89b29b'][i];fixtureCtx.fillRect(x*w-w*.1,h*.5,w*.2,h*.5);fixtureCtx.fillStyle='#f5dfb9';fixtureCtx.beginPath();fixtureCtx.ellipse(x*w,h*.38,w*.045,h*.105,0,0,Math.PI*2);fixtureCtx.fill();}fixtureCtx.fillStyle='#3d5637';fixtureCtx.font='24px sans-serif';fixtureCtx.fillText('SYNTHETIC CAMERA TEST '+w+' x '+h,20,35);}
+    drawFixture();setInterval(drawFixture,100);
+    navigator.mediaDevices.getUserMedia=async()=>fixtureCanvas.captureStream(10);
+    function fixtureFace(x){const y=.38,rx=fixturePortrait?.13:.045,ry=.105;const f=Array.from({length:478},(_,i)=>({x:x+Math.cos(i/478*Math.PI*2)*rx,y:y+Math.sin(i/478*Math.PI*2)*ry,z:0}));f[33]={x:x-rx*.5,y:y-.02,z:0};f[263]={x:x+rx*.5,y:y-.02,z:0};f[10]={x,y:y-ry,z:0};f[152]={x,y:y+ry,z:0};f[1]={x,y,z:-.04};f[13]={x,y:y+.04,z:0};f[14]={x,y:y+.045,z:0};return f;}
+    function fixturePose(x,index){
+      const p=Array.from({length:33},()=>({x,y:.38,z:0,visibility:1}));
+      const set=(id,dx,y)=>p[id]={x:x+dx,y,z:0,visibility:1};
+      set(11,.035,.51);set(12,-.035,.51);set(13,.055,.63);set(14,-.055,.63);set(15,.065,.73);set(16,-.065,.73);
+      set(23,.025,.70);set(24,-.025,.70);set(25,.025,.82);set(26,-.025,.82);set(27,.025,.93);set(28,-.025,.93);set(29,.025,.94);set(30,-.025,.94);set(31,.035,.95);set(32,-.035,.95);
+      if(index===0){set(13,.050,.33);set(15,.065,.17);}if(index===1){set(13,.070,.51);set(15,.105,.51);set(14,-.070,.51);set(16,-.105,.51);}
+      return p;
+    }
+    function fixtureWorld(index){
+      const w=Array.from({length:33},()=>({x:0,y:0,z:0,visibility:1}));
+      const set=(id,x,y,z=0)=>w[id]={x,y,z,visibility:1};
+      set(11,.16,-.35);set(12,-.16,-.35);set(13,.23,-.08);set(14,-.23,-.08);set(15,.28,.15);set(16,-.28,.15);
+      set(23,.11,.03);set(24,-.11,.03);set(25,.11,.40);set(26,-.11,.40);set(27,.11,.80);set(28,-.11,.80);set(29,.11,.84,.02);set(30,-.11,.84,.02);set(31,.11,.84,-.14);set(32,-.11,.84,-.14);
+      if(index===0){set(13,.25,-.60);set(15,.32,-.90);}if(index===1){set(13,.42,-.35);set(15,.68,-.35);set(14,-.42,-.35);set(16,-.68,-.35);}if(index===2){set(25,.11,.06,-.28);set(27,.11,.46,-.28);set(29,.11,.50,-.26);set(31,.11,.50,-.42);}
+      return w;
+    }
+    async function loadAI(){face={detectForVideo(){return {faceLandmarks:Array.from({length:fixtureCount},(_,i)=>fixtureFace(fixtureCount===1?.5:(i+.5)/fixtureCount)),facialTransformationMatrixes:Array.from({length:fixtureCount},(_,i)=>{const yaw=(i-(fixtureCount-1)/2)*.4,cos=Math.cos(yaw),sin=Math.sin(yaw);return {data:[cos,0,-sin,0,0,1,0,0,sin,0,cos,0,0,0,0,1]};}),faceBlendshapes:[]};}};pose={detectForVideo(){return {landmarks:Array.from({length:fixtureCount},(_,i)=>fixturePose(fixtureCount===1?.5:(i+.5)/fixtureCount,i)),worldLandmarks:Array.from({length:fixtureCount},(_,i)=>fixtureWorld(i))};}};}
+  `;
+  source=source.replace('<head>','<head><base href="../">').replace('renderActionGuide();loadArtwork();',setup+'\nrenderActionGuide();loadArtwork();');
+  document.getElementById('app').srcdoc=source;document.getElementById('result').textContent='当前 '+mode;
+})();
+</script></html>

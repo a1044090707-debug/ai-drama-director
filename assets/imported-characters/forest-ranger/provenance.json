@@ -1,0 +1,52 @@
+{
+  "asset": "forest-ranger",
+  "title": "Forest Ranger",
+  "kind": "character-static",
+  "made_with": "AssetFurnace (https://assetfurnace.com)",
+  "built": "2026-11-01",
+  "pipeline": [
+    {
+      "step": "source picture",
+      "tool": "Qwen-Image 2.1",
+      "license": {
+        "name": "Qwen Research License",
+        "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/blob/main/LICENSE",
+        "note": "Built with Qwen. Qwen states that the pictures its model generates belong to the person who made them."
+      }
+    },
+    {
+      "step": "3D model",
+      "tool": "Pixal3D",
+      "license": {
+        "name": "MIT (code + flow weights); DINOv3 License (bundled encoder)",
+        "url": "https://huggingface.co/raven38/pixal3d-sv-q8_0-v1"
+      }
+    },
+    {
+      "step": "head close-up upscale (Hero detail)",
+      "tool": "Real-ESRGAN x4plus",
+      "license": {
+        "name": "BSD-3-Clause",
+        "url": "https://github.com/xinntao/Real-ESRGAN/blob/master/LICENSE"
+      }
+    }
+  ],
+  "source_picture": {
+    "model": "Qwen-Image 2.1",
+    "record": "kept",
+    "prompt": "An original stylised female forest ranger: short-cropped auburn hair, a green hooded leather jerkin with a brown belt and pouches, a short cape, fitted trousers and tall leather boots, a quiver strapped across her back. Hand-painted game character style",
+    "seed": 42,
+    "steps": 8,
+    "size": [
+      768,
+      768
+    ],
+    "created": "2026-10-29T03:46:57+00:00"
+  },
+  "finish": {
+    "faces": null,
+    "texture_size": 2048,
+    "pixel_match": false,
+    "hero_head": true
+  }
+}

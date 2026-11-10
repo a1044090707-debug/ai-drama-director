@@ -1,0 +1,58 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>新增人物骨骼检查</title>
+<style>body{margin:20px;background:#f8f5eb;color:#435b31;font:15px/1.7 system-ui}canvas{display:block;width:100%;max-width:1400px;background:#e7ebdc}pre{white-space:pre-wrap}</style>
+<h1>新增人物骨骼与动作检查</h1><pre id="result">正在检查…</pre><canvas id="poses" width="1800" height="1600"></canvas>
+<script type="module">
+import * as T from '../vendor/three.module.js';
+import {createCharacterAvatar,createCharacterPool,HUMAN_MODELS} from '../character-models.mjs';
+import {createAvatarRenderer,MODEL_COUNT} from '../avatar3d.js';
+import {AvatarDriver} from '../model-preview/fullbody/driver.mjs';
+const results=[],out=document.getElementById('result');
+const assert=(condition,message)=>{if(!condition)throw new Error(message);results.push('PASS '+message);out.textContent=results.join('\n');};
+const point=(avatar,name)=>avatar.bones[name].getWorldPosition(new T.Vector3());
+const worlds=()=>{
+ const w=Array.from({length:33},()=>({x:0,y:0,z:0,visibility:0}));
+ const set=(id,x,y,z=0)=>w[id]={x,y,z,visibility:1};
+ set(11,.16,-.35);set(12,-.16,-.35);set(13,.30,-.65);set(15,.28,-.95);set(14,-.3,-.08);set(16,-.32,.18);
+ set(23,.11,.03);set(24,-.11,.03);set(25,.11,.40);set(26,-.11,.40);set(27,.11,.80);set(28,-.11,.80);
+ set(29,.11,.84,.02);set(30,-.11,.84,.02);set(31,.11,.84,-.14);set(32,-.11,.84,-.14);return w;
+};
+try{
+ assert(HUMAN_MODELS.length===8&&MODEL_COUNT===12,'8 位人物、4 位动物的编号一致');
+ for(const index of [9,10,11]){
+  const a=await createCharacterAvatar(index),b=await createCharacterAvatar(index);
+  assert(a.boneList.length===20,'角色 '+index+' 具有 20 个身体关节');
+  assert(a.bones.Head!==b.bones.Head&&a.parts[0].skeleton!==b.parts[0].skeleton,'角色 '+index+' 多人实例的骨骼独立');
+  assert(a.parts[0].geometry===b.parts[0].geometry,'角色 '+index+' 实例共享几何体');
+  for(const mesh of a.parts){
+   const weights=mesh.geometry.attributes.skinWeight,ids=mesh.geometry.attributes.skinIndex;
+   let valid=true;for(let i=0;i<weights.count;i++){let sum=0;for(let j=0;j<4;j++){const weight=weights.array[i*4+j];sum+=weight;if(!Number.isFinite(weight)||weight<0||ids.array[i*4+j]>=a.boneList.length)valid=false;}if(Math.abs(sum-1)>.0001)valid=false;}
+   assert(valid,'角色 '+index+' 蒙皮权重有效且总和为 1');
+  }
+  const restHand=point(a,'LeftHand'),otherHand=point(b,'LeftHand');
+  const samples=a.parts.map(mesh=>{const p=mesh.geometry.attributes.position,list=[];for(let i=0;i<p.count;i+=13)list.push([i,mesh.getVertexPosition(i,new T.Vector3())]);return {mesh,list};});
+  a.demo('wave',.4);assert(point(a,'LeftHand').y>restHand.y+.7,'角色 '+index+' 挥手时手腕抬高');
+  let changed=0;for(const {mesh,list} of samples)for(const [i,previous] of list)if(mesh.getVertexPosition(i,new T.Vector3()).distanceTo(previous)>.08)changed++;
+  assert(changed>30,'角色 '+index+' 动作实际改变网格顶点');
+  assert(point(b,'LeftHand').distanceTo(otherHand)<1e-6,'角色 '+index+' 动作不会影响其他实例');
+  a.demo('stand');const restKnee=point(a,'LeftLowerLeg');a.demo('step');
+  assert(point(a,'LeftLowerLeg').distanceTo(restKnee)>.25,'角色 '+index+' 抬腿时膝关节实际移动');
+  a.demo('squat');assert(Number.isFinite(a.root.position.y)&&Math.abs(a.root.position.y)<1.2,'角色 '+index+' 下蹲时地面修正有效');
+  const driver=new AvatarDriver(a),w=worlds();driver.update({worldLandmarks:w,headRotation:{yaw:.5,pitch:.1,roll:0}},1000);driver.frame(.1,1000);
+  assert(point(a,'LeftHand').y>point(a,'LeftUpperArm').y,'角色 '+index+' 跟随摄像头世界坐标举手');
+  assert(Math.abs(a.bones.Head.quaternion.y)>.05,'角色 '+index+' 跟随摄像头转头');
+  for(const p of w)p.visibility=0;driver.update({worldLandmarks:w},1100);for(let i=0;i<30;i++)driver.frame(.1,1100+i*100);
+  assert(!driver.legsVisible&&Number.isFinite(a.root.position.y)&&Math.abs(a.root.position.y)<.3,'角色 '+index+' 遮挡后回到站姿并保持地面位置');
+  assert(a.capabilities.jawOpen&&!a.capabilities.eyeBlink,'角色 '+index+' 支持张嘴并正确标记暂无眨眼');a.dispose();b.dispose();
+ }
+ const renderer=await createAvatarRenderer({maxInstances:1}),canvas=document.getElementById('poses'),ctx=canvas.getContext('2d');
+ for(const [row,pose] of ['stand','wave','arms','step'].entries()){
+  const items=[9,10,11].map((avatar,i)=>({id:'matrix-'+i,avatar,fullBody:true,slotCount:3,stageX:(i+.5)/3,demoPose:pose,observation:{rotation:{yaw:0}}}));
+  ctx.drawImage(renderer.draw(items,1800,400,400),0,row*400);ctx.font='22px system-ui';ctx.fillStyle='#435b31';ctx.fillText(pose,15,row*400+30);
+ }
+ assert(renderer.stats.heads===3,'三个新增角色同时在舞台渲染');renderer.dispose();
+ const pool=await createCharacterPool(4),actors=Array.from({length:4},()=>pool.acquire(9));actors[0].demo('wave',0);
+ assert(new Set(actors.map(a=>a.bones.LeftHand)).size===4,'同一新增角色支持四位独立演员');
+ for(const actor of actors)pool.release(actor);pool.dispose();
+ results.push('ALL PASS');out.textContent=results.join('\n');window.testResult={pass:true,checks:results.length-1};
+}catch(error){out.textContent+='\nFAIL '+error.stack;window.testResult={pass:false,error:String(error)};}
+</script></html>

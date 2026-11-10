@@ -1,0 +1,469 @@
+{
+  "source": "https://studio.blender.org/characters/rain/v3/",
+  "source_archive": "rain-v33.zip",
+  "source_sha256": "80217f163f6392dc829233d63c2cfb5e1376775bc34101ad14f39631fea70d24",
+  "credit": "Rain Rig (CC) Blender Foundation | studio.blender.org",
+  "license": "CC-BY-4.0",
+  "changes": [
+    "Base-color UV baking without lighting",
+    "Native face controls evaluated into portable shape keys",
+    "Body weights consolidated into a conventional humanoid rig",
+    "Cornea layer omitted for a simpler realtime eye material"
+  ],
+  "bones": [
+    {
+      "name": "Hips",
+      "source": "DEF-Pelvis",
+      "parent": null,
+      "head": [
+        0.0,
+        -0.01934024505317211,
+        0.8211356997489929
+      ],
+      "tail": [
+        0.0,
+        -0.027567200362682343,
+        1.013384461402893
+      ]
+    },
+    {
+      "name": "Spine",
+      "source": "DEF-Spine2",
+      "parent": "Hips",
+      "head": [
+        0.0,
+        -0.027567200362682343,
+        1.013384461402893
+      ],
+      "tail": [
+        0.0,
+        -0.02917187474668026,
+        1.158160924911499
+      ]
+    },
+    {
+      "name": "Chest",
+      "source": "DEF-Spine3",
+      "parent": "Spine",
+      "head": [
+        0.0,
+        -0.02917187474668026,
+        1.158160924911499
+      ],
+      "tail": [
+        0.0,
+        -0.014761176891624928,
+        1.2906169891357422
+      ]
+    },
+    {
+      "name": "Neck",
+      "source": "DEF-Neck",
+      "parent": "Chest",
+      "head": [
+        0.0,
+        -0.014761176891624928,
+        1.2906169891357422
+      ],
+      "tail": [
+        2.7295719443331084e-18,
+        -0.01636478677392006,
+        1.3921035528182983
+      ]
+    },
+    {
+      "name": "Head",
+      "source": "DEF-Head",
+      "parent": "Neck",
+      "head": [
+        2.7295719443331084e-18,
+        -0.01636478677392006,
+        1.3921035528182983
+      ],
+      "tail": [
+        0.0,
+        -0.02655281312763691,
+        1.615666389465332
+      ]
+    },
+    {
+      "name": "LeftShoulder",
+      "source": "DEF-Clavicle.L",
+      "parent": "Chest",
+      "head": [
+        0.023121483623981476,
+        -0.023427756503224373,
+        1.2487013339996338
+      ],
+      "tail": [
+        0.11308667063713074,
+        0.004191212356090546,
+        1.2508169412612915
+      ]
+    },
+    {
+      "name": "LeftUpperArm",
+      "source": "DEF-Upperarm1.L",
+      "parent": "LeftShoulder",
+      "head": [
+        0.11308667063713074,
+        0.004191212356090546,
+        1.2508169412612915
+      ],
+      "tail": [
+        0.3175881505012512,
+        0.013837289065122604,
+        1.2407041788101196
+      ]
+    },
+    {
+      "name": "LeftForeArm",
+      "source": "DEF-Forearm1.L",
+      "parent": "LeftUpperArm",
+      "head": [
+        0.3175881505012512,
+        0.013837289065122604,
+        1.2407041788101196
+      ],
+      "tail": [
+        0.5287641882896423,
+        -0.012543088756501675,
+        1.231242299079895
+      ]
+    },
+    {
+      "name": "LeftHand",
+      "source": "DEF-Hand.L",
+      "parent": "LeftForeArm",
+      "head": [
+        0.5287641882896423,
+        -0.012543088756501675,
+        1.231242299079895
+      ],
+      "tail": [
+        0.5841583609580994,
+        -0.019715938717126846,
+        1.2286487817764282
+      ]
+    },
+    {
+      "name": "LeftUpperLeg",
+      "source": "DEF-Thigh1.L",
+      "parent": "Hips",
+      "head": [
+        0.08163905888795853,
+        -0.021541016176342964,
+        0.855929434299469
+      ],
+      "tail": [
+        0.07556991279125214,
+        -0.024581214413046837,
+        0.4677979052066803
+      ]
+    },
+    {
+      "name": "LeftLowerLeg",
+      "source": "DEF-Shin1.L",
+      "parent": "LeftUpperLeg",
+      "head": [
+        0.07556991279125214,
+        -0.024581214413046837,
+        0.4677979052066803
+      ],
+      "tail": [
+        0.06574691832065582,
+        -0.004241173155605793,
+        0.07748226076364517
+      ]
+    },
+    {
+      "name": "LeftFoot",
+      "source": "DEF-Foot.L",
+      "parent": "LeftLowerLeg",
+      "head": [
+        0.06574691832065582,
+        -0.004241173155605793,
+        0.07748226076364517
+      ],
+      "tail": [
+        0.06885963678359985,
+        -0.10859690606594086,
+        0.024931207299232483
+      ]
+    },
+    {
+      "name": "LeftToe",
+      "source": "DEF-Toe.L",
+      "parent": "LeftFoot",
+      "head": [
+        0.06885963678359985,
+        -0.10859690606594086,
+        0.024931207299232483
+      ],
+      "tail": [
+        0.06967712938785553,
+        -0.18376542627811432,
+        0.004603576846420765
+      ]
+    },
+    {
+      "name": "RightShoulder",
+      "source": "DEF-Clavicle.R",
+      "parent": "Chest",
+      "head": [
+        -0.023121483623981476,
+        -0.023427756503224373,
+        1.2487013339996338
+      ],
+      "tail": [
+        -0.11308667063713074,
+        0.004191212356090546,
+        1.2508169412612915
+      ]
+    },
+    {
+      "name": "RightUpperArm",
+      "source": "DEF-Upperarm1.R",
+      "parent": "RightShoulder",
+      "head": [
+        -0.11308667063713074,
+        0.004191212356090546,
+        1.2508169412612915
+      ],
+      "tail": [
+        -0.3175881505012512,
+        0.013837289065122604,
+        1.2407041788101196
+      ]
+    },
+    {
+      "name": "RightForeArm",
+      "source": "DEF-Forearm1.R",
+      "parent": "RightUpperArm",
+      "head": [
+        -0.3175881505012512,
+        0.013837289065122604,
+        1.2407041788101196
+      ],
+      "tail": [
+        -0.5287641882896423,
+        -0.012543088756501675,
+        1.231242299079895
+      ]
+    },
+    {
+      "name": "RightHand",
+      "source": "DEF-Hand.R",
+      "parent": "RightForeArm",
+      "head": [
+        -0.5287641882896423,
+        -0.012543088756501675,
+        1.231242299079895
+      ],
+      "tail": [
+        -0.5841583609580994,
+        -0.019715938717126846,
+        1.2286487817764282
+      ]
+    },
+    {
+      "name": "RightUpperLeg",
+      "source": "DEF-Thigh1.R",
+      "parent": "Hips",
+      "head": [
+        -0.08163905888795853,
+        -0.021541016176342964,
+        0.855929434299469
+      ],
+      "tail": [
+        -0.07556991279125214,
+        -0.024581214413046837,
+        0.4677979052066803
+      ]
+    },
+    {
+      "name": "RightLowerLeg",
+      "source": "DEF-Shin1.R",
+      "parent": "RightUpperLeg",
+      "head": [
+        -0.07556991279125214,
+        -0.024581214413046837,
+        0.4677979052066803
+      ],
+      "tail": [
+        -0.06574691832065582,
+        -0.004241173155605793,
+        0.07748226076364517
+      ]
+    },
+    {
+      "name": "RightFoot",
+      "source": "DEF-Foot.R",
+      "parent": "RightLowerLeg",
+      "head": [
+        -0.06574691832065582,
+        -0.004241173155605793,
+        0.07748226076364517
+      ],
+      "tail": [
+        -0.06885963678359985,
+        -0.10859690606594086,
+        0.024931207299232483
+      ]
+    },
+    {
+      "name": "RightToe",
+      "source": "DEF-Toe.R",
+      "parent": "RightFoot",
+      "head": [
+        -0.06885963678359985,
+        -0.10859690606594086,
+        0.024931207299232483
+      ],
+      "tail": [
+        -0.06967712938785553,
+        -0.18376542627811432,
+        0.004603576846420765
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Rain_gums_upper",
+      "vertices": 3069,
+      "polygons": 2880,
+      "morphs": [
+        "jawOpen",
+        "eyeBlinkLeft",
+        "eyeBlinkRight",
+        "mouthSmile"
+      ]
+    },
+    {
+      "name": "Rain_gums_lower",
+      "vertices": 3068,
+      "polygons": 2880,
+      "morphs": [
+        "jawOpen",
+        "eyeBlinkLeft",
+        "eyeBlinkRight",
+        "mouthSmile"
+      ]
+    },
+    {
+      "name": "Rain_tongue",
+      "vertices": 275,
+      "polygons": 264,
+      "morphs": [
+        "jawOpen",
+        "eyeBlinkLeft",
+        "eyeBlinkRight",
+        "mouthSmile"
+      ]
+    },
+    {
+      "name": "Rain_eyebrows",
+      "vertices": 296,
+      "polygons": 260,
+      "morphs": [
+        "jawOpen",
+        "eyeBlinkLeft",
+        "eyeBlinkRight",
+        "mouthSmile"
+      ]
+    },
+    {
+      "name": "Rain_eyelashes",
+      "vertices": 240,
+      "polygons": 236,
+      "morphs": [
+        "jawOpen",
+        "eyeBlinkLeft",
+        "eyeBlinkRight",
+        "mouthSmile"
+      ]
+    },
+    {
+      "name": "Rain_head",
+      "vertices": 6395,
+      "polygons": 6318,
+      "morphs": [
+        "jawOpen",
+        "eyeBlinkLeft",
+        "eyeBlinkRight",
+        "mouthSmile"
+      ]
+    },
+    {
+      "name": "Rain_body",
+      "vertices": 6128,
+      "polygons": 6004,
+      "morphs": []
+    },
+    {
+      "name": "Rain_eyes",
+      "vertices": 1418,
+      "polygons": 1410,
+      "morphs": []
+    },
+    {
+      "name": "Rain_eye_dots",
+      "vertices": 64,
+      "polygons": 2,
+      "morphs": []
+    },
+    {
+      "name": "Rain_scarf",
+      "vertices": 1285,
+      "polygons": 1217,
+      "morphs": []
+    },
+    {
+      "name": "Rain_shoes",
+      "vertices": 6634,
+      "polygons": 6254,
+      "morphs": []
+    },
+    {
+      "name": "Rain_top",
+      "vertices": 3264,
+      "polygons": 3268,
+      "morphs": []
+    },
+    {
+      "name": "Rain_jeans",
+      "vertices": 4280,
+      "polygons": 4192,
+      "morphs": []
+    },
+    {
+      "name": "Rain_hair_main",
+      "vertices": 2204,
+      "polygons": 1965,
+      "morphs": []
+    },
+    {
+      "name": "Rain_hair_ponytail",
+      "vertices": 579,
+      "polygons": 569,
+      "morphs": []
+    },
+    {
+      "name": "Rain_hair_strand",
+      "vertices": 400,
+      "polygons": 393,
+      "morphs": []
+    },
+    {
+      "name": "Rain_hairband",
+      "vertices": 480,
+      "polygons": 480,
+      "morphs": []
+    }
+  ],
+  "bytes": 9111200,
+  "limitations": [
+    "Blender-only procedural shading and deformation correctives are simplified.",
+    "Rig conversion and expression extremes require visual checking before live use."
+  ]
+}

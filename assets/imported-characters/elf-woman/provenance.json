@@ -1,0 +1,61 @@
+{
+  "asset": "elf-woman",
+  "title": "Elf Woman",
+  "kind": "character-static",
+  "made_with": "AssetFurnace (https://assetfurnace.com)",
+  "built": "2026-11-01",
+  "pipeline": [
+    {
+      "step": "source picture",
+      "tool": "Qwen-Image 2.1",
+      "license": {
+        "name": "Qwen Research License",
+        "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/blob/main/LICENSE",
+        "note": "Built with Qwen. Qwen states that the pictures its model generates belong to the person who made them."
+      }
+    },
+    {
+      "step": "back view picture",
+      "tool": "Qwen-Image 2.1",
+      "license": {
+        "name": "Qwen Research License",
+        "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/blob/main/LICENSE",
+        "note": "Built with Qwen. Qwen states that the pictures its model generates belong to the person who made them."
+      }
+    },
+    {
+      "step": "3D model",
+      "tool": "Pixal3D",
+      "license": {
+        "name": "MIT (code + flow weights); DINOv3 License (bundled encoder)",
+        "url": "https://huggingface.co/raven38/pixal3d-sv-q8_0-v1"
+      }
+    },
+    {
+      "step": "head close-up upscale (Hero detail)",
+      "tool": "Real-ESRGAN x4plus",
+      "license": {
+        "name": "BSD-3-Clause",
+        "url": "https://github.com/xinntao/Real-ESRGAN/blob/master/LICENSE"
+      }
+    }
+  ],
+  "source_picture": {
+    "model": "Qwen-Image 2.1",
+    "record": "kept",
+    "prompt": "A realistic 3D game character render of a young elf ranger woman with pale skin, long pointed ears, sharp cheekbones, light grey eyes and silver-blonde hair tied back in a single braid behind her shoulders, wearing a fitted forest-green leather tunic with a brown belt, dark leggings and soft brown leather boots. Full body, facing the camera, head level, standing in an A-pose: arms angled down about 45 degrees and clear of the body, relaxed open hands with fingers together, palms facing the legs, feet apart at shoulder width, legs straight, toes forward. Eyes wide open, calm neutral face, mouth closed, hair clear of the face and shoulders. Empty hands. Soft even lighting, plain light grey background, full body, front view, standing in an A-pose, arms straight and angled down about 45 degrees with a clear gap from the body, hands open, palms facing down, empty hands, feet slightly apart, eyes open, slightly larger, clearly defined eyes with visible eyelids, plain light grey background, soft even studio lighting",
+    "seed": 1926477797,
+    "steps": 8,
+    "size": [
+      768,
+      768
+    ],
+    "created": "2026-10-20T13:02:29+00:00"
+  },
+  "finish": {
+    "faces": null,
+    "texture_size": 2048,
+    "pixel_match": false,
+    "hero_head": true
+  }
+}

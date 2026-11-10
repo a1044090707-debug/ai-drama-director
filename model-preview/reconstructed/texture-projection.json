@@ -1,0 +1,17 @@
+{
+  "method": "orthographic reference UV projection onto reconstructed 3D triangles",
+  "geometry": "orange-girl-shape.glb",
+  "faces_per_reference": {
+    "front": 144179,
+    "right": 130794,
+    "back": 165801,
+    "left_mirrored": 128032
+  },
+  "left_side": "mirrored right reference",
+  "material": "unlit; reference lighting is baked into the illustration",
+  "limitations": [
+    "view seams need refinement",
+    "not neural texture synthesis",
+    "no expression topology or rig"
+  ]
+}

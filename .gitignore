@@ -1,0 +1,8 @@
+.modeling/
+__pycache__/
+*.pyc
+
+_shortfilm_data/
+tools/ffmpeg/*.exe
+tools/ffmpeg/*.download
+__pycache__/

@@ -1,0 +1,11 @@
+{
+  "render": {"width": 1050, "height": 1500, "samples": 32, "view": "front", "character_height": 1.82},
+  "characters": [
+    {"id":"W01","group":"western","name":"浅金蓝眼男生","base":"snow","skin":["c98e76","f0cbb4","f8dfc9"],"hair":["a57636","e4bd71","f2d897"],"iris":["163c5e","4c9cd4","abd6ed"],"shirt":["cfc4aa","f2e8d5","faf5e9"],"pants":["687f9c","9ab4ce","c7d7e5"],"accent":["94b6c4","b9d3dc","d8e5e7"],"head_width":0.98,"hair_height":0.94,"nose_width":0.94,"short_hair":false},
+    {"id":"W02","group":"western","name":"赤棕绿眼女生","base":"rain","skin":["cb8e7a","efc3ad","f8dbc7"],"hair":["6e3021","ad542f","cf8450"],"iris":["1f4336","668e5c","bad0a0"],"shirt":["d1c3b0","f1e5d4","fff5e7"],"pants":["425772","6d87a5","9eafc1"],"accent":["ad5d4a","dd9178","efbda3"],"head_width":0.99,"hair_height":1.0,"nose_width":0.98,"short_hair":false},
+    {"id":"W03","group":"western","name":"深金蓝眼短发女生","base":"rain","skin":["c9947c","ecc9ad","f5dfc6"],"hair":["705024","b18a45","d6b66c"],"iris":["223b59","648fb9","b7d4e5"],"shirt":["72978b","a4c0b0","cbdacf"],"pants":["a59d8f","d4cbbb","eee7da"],"accent":["b38c57","d8b681","eed5a8"],"head_width":0.97,"hair_height":0.9,"nose_width":0.96,"short_hair":true},
+    {"id":"C01","group":"chinese","name":"黑发棕眼校园男生","base":"snow","skin":["bd9276","e8c3a1","f3dbc0"],"hair":["171d21","293235","485352"],"iris":["281e18","684d33","b18b58"],"shirt":["719e96","a5cabb","d2e3d3"],"pants":["1d3449","354f64","5e7487"],"accent":["c9c2b1","e2dfd0","f4eee0"],"head_width":1.015,"hair_height":0.9,"nose_width":1.0,"short_hair":false},
+    {"id":"C02","group":"chinese","name":"深棕发运动女生","base":"rain","skin":["c29377","ebc1a0","f6d9ba"],"hair":["261d1a","4c3426","775340"],"iris":["261b16","62432b","ad7e4e"],"shirt":["547e9f","8ab5ce","c0d8e5"],"pants":["263f52","4f697c","8198a6"],"accent":["d1bd98","eee0c4","faf0d9"],"head_width":1.01,"hair_height":1.0,"nose_width":1.0,"short_hair":false},
+    {"id":"C03","group":"chinese","name":"黑发休闲男生","base":"snow","skin":["bc9076","e5bd9d","f3d5b9"],"hair":["161b20","282e33","424b50"],"iris":["231b17","5d452f","a28254"],"shirt":["2b4058","496681","7c94a9"],"pants":["9b9d9a","c6c8c2","e1e3dc"],"accent":["577c8d","8eafbd","bdcfd5"],"head_width":1.04,"hair_height":0.74,"nose_width":0.98,"short_hair":false}
+  ]
+}

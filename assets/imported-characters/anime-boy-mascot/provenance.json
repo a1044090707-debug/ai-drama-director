@@ -1,0 +1,43 @@
+{
+  "asset": "anime-boy-mascot",
+  "title": "Anime Boy Mascot",
+  "kind": "character-static",
+  "made_with": "AssetFurnace (https://assetfurnace.com)",
+  "built": "2026-10-16",
+  "pipeline": [
+    {
+      "step": "source picture",
+      "tool": "Qwen-Image 2.1",
+      "license": {
+        "name": "Qwen Research License",
+        "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/blob/main/LICENSE",
+        "note": "Built with Qwen. Qwen states that the pictures its model generates belong to the person who made them."
+      }
+    },
+    {
+      "step": "3D model",
+      "tool": "Pixal3D",
+      "license": {
+        "name": "MIT (code + flow weights); DINOv3 License (bundled encoder)",
+        "url": "https://huggingface.co/raven38/pixal3d-sv-q8_0-v1"
+      }
+    }
+  ],
+  "source_picture": {
+    "model": "Qwen-Image 2.1",
+    "record": "kept",
+    "prompt": "A young anime boy. Big eyes. Wearing a baseball cap. Wearing a backpack. Baseball cap says \"Asset Furnace\". Wearing a blue T-shirt that says \"Costs $0.00\", full body, standing in an A-pose, arms angled down about 45 degrees away from the body, relaxed open hands, empty hands, no cape or loose cloth, plain light grey background, soft even studio lighting",
+    "seed": 1234,
+    "steps": 10,
+    "size": [
+      768,
+      768
+    ],
+    "created": "2026-10-07T11:34:35+00:00"
+  },
+  "finish": {
+    "faces": 20000,
+    "texture_size": 2048,
+    "pixel_match": true
+  }
+}
