@@ -44,13 +44,13 @@ try{
   assert(!driver.legsVisible&&Number.isFinite(a.root.position.y)&&Math.abs(a.root.position.y)<.3,'角色 '+index+' 遮挡后回到站姿并保持地面位置');
   assert(a.capabilities.jawOpen&&!a.capabilities.eyeBlink,'角色 '+index+' 支持张嘴并正确标记暂无眨眼');a.dispose();b.dispose();
  }
- const renderer=await createAvatarRenderer({maxInstances:1}),canvas=document.getElementById('poses'),ctx=canvas.getContext('2d');
+ const renderer=await createAvatarRenderer({maxInstances:1,initialModels:[9,10,11]}),canvas=document.getElementById('poses'),ctx=canvas.getContext('2d');
  for(const [row,pose] of ['stand','wave','arms','step'].entries()){
   const items=[9,10,11].map((avatar,i)=>({id:'matrix-'+i,avatar,fullBody:true,slotCount:3,stageX:(i+.5)/3,demoPose:pose,observation:{rotation:{yaw:0}}}));
   ctx.drawImage(renderer.draw(items,1800,400,400),0,row*400);ctx.font='22px system-ui';ctx.fillStyle='#435b31';ctx.fillText(pose,15,row*400+30);
  }
  assert(renderer.stats.heads===3,'三个新增角色同时在舞台渲染');renderer.dispose();
- const pool=await createCharacterPool(4),actors=Array.from({length:4},()=>pool.acquire(9));actors[0].demo('wave',0);
+ const pool=await createCharacterPool(4,{initialModels:[9,9,9,9]}),actors=Array.from({length:4},()=>pool.acquire(9));actors[0].demo('wave',0);
  assert(new Set(actors.map(a=>a.bones.LeftHand)).size===4,'同一新增角色支持四位独立演员');
  for(const actor of actors)pool.release(actor);pool.dispose();
  results.push('ALL PASS');out.textContent=results.join('\n');window.testResult={pass:true,checks:results.length-1};

@@ -289,12 +289,14 @@
       });
       this.startMs=performance.now();this.recording=true;this.assignActors();
       if(this.guidePlan)this.guide=new root.MovieGuide.GuideRun(this.guidePlan,this.startMs);
-      this.recorder.start(1000);this.drawCapture();
+      this.lastCapturePaint=-Infinity;this.recorder.start(1000);this.drawCapture();
       this.clockTimer=setInterval(()=>this.tick(),250);this.tick();this.update();this.adapter.refresh?.();
       this.adapter.focusStage?.();
     }
-    drawCapture(){
+    drawCapture(t=performance.now()){
       if(!this.recording)return;
+      if(t-(this.lastCapturePaint??-Infinity)<1000/24){this.captureRaf=requestAnimationFrame(now=>this.drawCapture(now));return;}
+      this.lastCapturePaint=t;
       const ctx=this.context;
       ctx.fillStyle='#dce5c9';ctx.fillRect(0,0,960,540);
       ctx.drawImage(this.adapter.canvas,0,0,960,540);
@@ -302,7 +304,7 @@
       // clean; the exported shot gets its stable actor name from the event log.
       ctx.fillStyle='#dce5c9';ctx.fillRect(0,491,960,49);
       // The capture contains the avatar stage only; captions and effects are composed later.
-      this.captureRaf=requestAnimationFrame(()=>this.drawCapture());
+      this.captureRaf=requestAnimationFrame(now=>this.drawCapture(now));
     }
     tick(){
       if(!this.recording)return;
@@ -322,7 +324,7 @@
       if(slot===undefined||this.events.length>=100)return;
       const event={id:'event-'+this.events.length,timeMs:Math.round(at-this.startMs),
         actorId:'actor-'+slot,actorName:this.slots[slot].name,trackId:track.id,avatarId:track.avatar,
-        action,originalLine:line,level,focusX:this.adapter.mirrored()?1-track.x:track.x};
+        action,originalLine:line,level,focusX:this.adapter.mirrored()?1-(track.stageX??track.x):(track.stageX??track.x)};
       if(this.guide&&!this.guide.accept(event,at))return;
       this.events.push(event);
       byId('filmEventCount').textContent=this.events.length+' 个动作';

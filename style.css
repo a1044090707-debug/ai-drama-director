@@ -232,3 +232,5 @@ svg { width: 1em; height: 1em; display: inline-block; flex-shrink: 0; vertical-a
 .avatar-option .human-portrait { width: 100%; max-width: 78px; aspect-ratio: 1; }
 .player .human-portrait { width: 54%; aspect-ratio: .86; align-self: end; margin: 0 0 -7px -3px; background-size: 115% 115%; background-position: center bottom; }
 @media (max-width:480px) { .player .human-portrait { width: 90%; aspect-ratio: 1.1; align-self: center; margin: 0; background-size: contain; }.avatar-option { font-size: 10px; }.role-tabs button { font-size: 11px; } }
+
+.camera-tools label{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#536a3d}.camera-tools select{max-width:90px;padding:5px 7px;border:1px solid #b9c9a6;border-radius:8px;background:#fffdf5;color:#415837;font:inherit}.camera-tools button:disabled,.camera-tools select:disabled{opacity:.55}

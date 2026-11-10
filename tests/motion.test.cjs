@@ -30,3 +30,29 @@ test('3D landmark yaw changes when the relative eye depth changes',()=>{
 test('portrait and landscape capture retain their real aspect ratios',()=>{
   assert.deepEqual(Motion.captureSize(720,1280),{width:720,height:1280});assert.deepEqual(Motion.captureSize(1920,1080),{width:1280,height:720});assert.deepEqual(Motion.captureSize(1080,1920),{width:720,height:1280});
 });
+
+test('smaller faces remain usable above the pixel floor; tiny faces are rejected',()=>{
+  const f=face().map(p=>({...p,x:.5+(p.x-.5)*.1,y:.4+(p.y-.4)*.1}));
+  f[14].y=.419;
+  assert.equal(Motion.classify(null,f,{observation:{frameWidth:1280}}),'mouth');
+  const tiny=f.map(p=>({...p,x:.5+(p.x-.5)*.1,y:.4+(p.y-.4)*.1}));
+  assert.equal(Motion.classify(null,tiny,{observation:{frameWidth:1280}}),null);
+});
+
+test('per-actor neutral calibration removes a fixed camera tilt while preserving later gestures',()=>{
+  const f=face();f[263].y=.5;
+  const track={neutralFace:Motion.faceMetrics(f)};
+  assert.equal(Motion.classify(null,f,track),null);
+  f[263].y=.65;assert.equal(Motion.classify(null,f,track),'tilt');
+});
+
+test('lowering both hands clears the previous wave latch',()=>{
+  const p=pose(),track={};
+  for(const [i,x]of [.25,.31,.23,.32,.24].entries()){p[15]={x,y:.2};Motion.classify(p,null,track,i*150);}
+  p[15]={x:.42,y:.8};assert.equal(Motion.classify(p,null,track,700),null);
+});
+
+test('non-finite or absent wrists cannot trigger a body action',()=>{
+  const p=pose();p[15]={x:NaN,y:.1};p[16]={x:.6,y:.1,presence:.1};
+  assert.equal(Motion.classify(p,null),null);
+});

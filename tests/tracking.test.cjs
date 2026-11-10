@@ -41,7 +41,7 @@ test('one occluded wrist does not suppress the other wrist forehead gesture',()=
 });
 test('each actor debounces independently; simultaneous gestures are queued by global cooldown',()=>{
   const h=harness();h.sandbox.input=[observation(.2),observation(.8)];
-  h.run(`updateTracks(input,0);performing=true;var fired=[];detect=()=> 'turn';fire=(action,track,t)=>{track.lastFire=t;lastGlobalFire=t;fired.push(track.id);};processActions(0);processActions(250);processActions(1000);processActions(2000);`);
+  h.run(`updateTracks(input,0);performing=true;var fired=[];detect=()=> 'turn';fire=(action,track,t)=>{track.lastFire=t;lastGlobalFire=t;fired.push(track.id);};for(var stamp=0;stamp<=2000;stamp+=100)processActions(stamp);`);
   assert.deepEqual(JSON.parse(h.run('JSON.stringify(fired)')),[1,2]);
   h.run(`detect=()=>null;processActions(2300);processActions(2700);`);assert.equal(h.run('tracks.every(t=>t.armed)'),true);
 });
@@ -76,4 +76,36 @@ test('every human and animal role has a corresponding 3D model ID',async()=>{
   assert.equal(characters.all.filter(c=>c.group==='animal').length,4);
   assert.equal(new Set(characters.all.map(c=>c.name)).size,12);
   assert.equal(characters.validIndex(7),true);assert.equal(characters.validIndex(8),true);assert.equal(characters.validIndex(11),true);assert.equal(characters.validIndex(12),false);
+});
+
+test('two actors standing close have separate stage slots and independent source positions',()=>{
+  const h=harness();h.sandbox.input=[observation(.49),observation(.51)];h.run('updateTracks(input,0);var stage=stageActors(tracks,100);');
+  assert.equal(h.run('stage[0].stageX'),.25);assert.equal(h.run('stage[1].stageX'),.75);
+  assert.equal(h.run('tracks[0].x'),.49);assert.equal(h.run('tracks[1].x'),.51);
+  h.run('tracks[0].x=.7;tracks[1].x=.3;stageActors(tracks,200);');
+  assert.equal(h.run('tracks[0].stageX'),.25);
+});
+
+test('brief detector loss holds the stage layout without accepting a stale action',()=>{
+  const h=harness();h.sandbox.input=[observation(.3),observation(.7)];h.run('updateTracks(input,0);updateTracks([input[0]],100);');
+  assert.equal(h.run('stageActors(tracks,200).length'),2);
+  assert.equal(h.run('tracks[1].visible'),false);
+  assert.equal(h.run('stageActors(tracks,500).length'),1);
+});
+
+test('long inference gaps cannot count as a continuously held gesture',()=>{
+  const h=harness();h.sandbox.input=[observation(.5)];
+  h.run(`updateTracks(input,0);performing=true;var fired=[];detect=()=> 'turn';fire=(a,p,t)=>{p.lastFire=t;lastGlobalFire=t;fired.push(a);};processActions(0);processActions(1000);`);
+  assert.equal(h.run('fired.length'),0);h.run('processActions(1100);processActions(1300);');assert.equal(h.run('fired.length'),1);
+});
+
+test('starting a film with a different participant count reconfigures an active free session',async()=>{
+  const h=harness();
+  h.run(`var calls=[];primeAudio=()=>{};stop=()=>{stream=null;performing=false;calls.push('stop');};
+    openCamera=async()=>{stream={active:true};return true;};initAvatar3D=async()=>null;
+    loadAI=async()=>{loadedParticipantLimit=participantLimit();};loop=()=>calls.push('loop');
+    performing=true;stream={active:true};loadedParticipantLimit=2;$('participantLimit').value='4';`);
+  await h.run('connect(true)');
+  assert.equal(h.run('loadedParticipantLimit'),4);assert.equal(h.run('performing'),true);
+  assert.deepEqual(JSON.parse(h.run('JSON.stringify(calls)')),['stop','loop']);
 });

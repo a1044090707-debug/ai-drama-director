@@ -45,7 +45,7 @@ try{
    details.push({model:model.name,action,ok,left:left.toArray(),head:head.toArray(),contact:action==='forehead'||action==='head'?contact(a,'Left',action).toArray():null,restHead:a.rest.Head.toArray(),restUpper:a.rest.LeftUpperArm.toArray(),restFore:a.rest.LeftForeArm.toArray(),restHand:a.rest.LeftHand.toArray()});assert(ok,model.name+' / '+Motion.actions[action].name+' 角色实际完成动作');
   }a.dispose();
  }
- const renderer=await createAvatarRenderer({maxInstances:1}),canvas=document.getElementById('mouths'),ctx=canvas.getContext('2d');
+ const renderer=await createAvatarRenderer({maxInstances:1,initialModels:[9,10,11]}),canvas=document.getElementById('mouths'),ctx=canvas.getContext('2d');
  for(let row=0;row<2;row++)for(let col=0;col<3;col++){
   const item={id:'face-'+col,avatar:col+9,snap:true,demoAction:row?'mouth':undefined,demoPose:row?undefined:'stand',observation:{x:.5,y:.5,rotation:{yaw:0,pitch:0,roll:0}}};
   let image;for(let n=0;n<10;n++)image=renderer.draw([item],600,500,1000+row*1000+n*33);

@@ -5,7 +5,7 @@
   'use strict';
   const clamp=(x,min,max)=>Math.min(max,Math.max(min,x));
   const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-  const visible=p=>p&&(p.visibility??1)>.48;
+  const visible=p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&(p.visibility??1)>.48&&(p.presence??1)>.45;
   const actions={
     forehead:{name:'扶额',lines:['检测到扶额。','事情开始变得不对劲。','这一扶额，让全宇宙的周一提前到来。']},
     head:{name:'双手抱头',lines:['检测到双手抱头。','系统检测到人生重大危机。','主角精神值归零，世界申请紧急重启！']},
@@ -31,10 +31,11 @@
   function wave(p,track,t){
     if(!track||!p||![11,12].every(i=>visible(p[i])))return false;
     const span=dist(p[11],p[12]);if(span<.06)return false;
-    track.waveState??=[{},{}];const center=(p[11].x+p[12].x)/2;
+    track.waveState??=[{},{}];const center=(p[11].x+p[12].x)/2;let eligible=false;
     [15,16].forEach((index,i)=>{
       const wrist=p[index],state=track.waveState[i];
       if(!visible(wrist)||wrist.y>Math.max(p[11].y,p[12].y)+span*.1){track.waveState[i]={};return;}
+      eligible=true;
       const x=(wrist.x-center)/span;
       if(state.anchor===undefined||t-state.started>1700){Object.assign(state,{anchor:x,extreme:x,direction:0,turns:0,started:t});return;}
       const delta=x-state.extreme;
@@ -42,7 +43,17 @@
       if(delta*state.direction>0){if(Math.abs(delta)>.02)track.waveMovingUntil=t+450;state.extreme=x;return;}
       if(Math.abs(delta)>.18){track.waveMovingUntil=t+450;state.direction*=-1;state.extreme=x;state.turns++;if(state.turns>=2){track.waveUntil=t+800;state.turns=0;state.started=t;}}
     });
-    return t<(track.waveUntil||0);
+    if(!eligible)track.waveUntil=0;
+    return eligible&&t<(track.waveUntil||0);
+  }
+  function faceMetrics(f,aspect=1,width=0){
+    if(!f?.[33]||!f?.[263])return null;
+    const left=f[33],right=f[263],dx=right.x-left.x,dy=(right.y-left.y)/aspect,eye=Math.hypot(dx,dy);
+    // A fixed fraction of the whole frame discarded otherwise usable smaller faces.
+    if(!(eye>Math.max(.008,width>0?8/width:.008)))return null;
+    const roll=Math.atan2(dy,dx),projection=f[1]?((f[1].x-left.x)*dx+(f[1].y-left.y)/aspect*dy)/(eye*eye):.5;
+    const mouth=f[13]&&f[14]?Math.hypot(f[13].x-f[14].x,(f[13].y-f[14].y)/aspect)/eye:0;
+    return [roll,projection,mouth].every(Number.isFinite)?{roll,projection,mouth}:null;
   }
   function classify(p,f,track,t=0){
     const aspect=track?.observation?.aspect||1;
@@ -60,13 +71,11 @@
         if(visible(lw)&&visible(rw)&&Math.abs(lw.y-ls.y)<span*.48&&Math.abs(rw.y-rs.y)<span*.48&&Math.abs(lw.x-rw.x)>span*2.1)return 'arms';
       }
     }
-    if(f?.[33]&&f?.[263]){
-      const left=f[33],right=f[263],dx=right.x-left.x,dy=(right.y-left.y)/aspect,eye=Math.hypot(dx,dy);
-      if(eye>.025){
-        if(f[13]&&f[14]&&Math.hypot(f[13].x-f[14].x,(f[13].y-f[14].y)/aspect)/eye>.28)return 'mouth';
-        if(Math.abs(Math.atan2(dy,dx))>.32)return 'tilt';
-        if(f[1]){const projection=((f[1].x-left.x)*dx+(f[1].y-left.y)/aspect*dy)/(eye*eye);if(Math.abs(projection-.5)>.25)return 'turn';}
-      }
+    const metrics=faceMetrics(f,aspect,track?.observation?.frameWidth),neutral=track?.neutralFace||{roll:0,projection:.5,mouth:0};
+    if(metrics){
+      if(metrics.mouth>Math.max(.28,neutral.mouth+.22))return 'mouth';
+      if(Math.abs(metrics.roll-neutral.roll)>.32)return 'tilt';
+      if(Math.abs(metrics.projection-neutral.projection)>.25)return 'turn';
     }
     return null;
   }
@@ -74,5 +83,5 @@
     if(!(width>0&&height>0))return {width:0,height:0};
     const scale=Math.min(1,maxEdge/Math.max(width,height));return {width:Math.round(width*scale),height:Math.round(height*scale)};
   }
-  return {actions,headPose,classify,captureSize};
+  return {actions,headPose,classify,captureSize,faceMetrics};
 });

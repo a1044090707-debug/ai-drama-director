@@ -34,6 +34,12 @@ test('events are relative to the capture start and previous events are ignored',
  studio.recordEvent({action:'wave',track:tracks[0],line:'台词',level:2,at:3500});
  assert.equal(studio.events[0].timeMs,2500);assert.equal(studio.events[0].focusX,.75);
 });
+
+test('movie close-ups follow the separated stage slot rather than the source face',()=>{
+ const {studio,tracks}=harness();studio.assignActors();tracks[0].x=.49;tracks[0].stageX=.25;
+ studio.recordEvent({action:'wave',track:tracks[0],line:'台词',level:2,at:3500});
+ assert.equal(studio.events[0].focusX,.75);
+});
 test('finishing capture locks new rounds until recorder onstop has finalized the blob',()=>{
  const {studio,elements}=harness();studio.assignActors();let stopped=0;
  studio.recorder={state:'recording',stop(){stopped++;}};studio.stopPromise=Promise.resolve();

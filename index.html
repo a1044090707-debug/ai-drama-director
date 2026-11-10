@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#faf7f0">
   <title>AI 戏精导演 · 多人片场</title>
-  <link rel="stylesheet" href="style.css?v=film-1">
+  <link rel="stylesheet" href="style.css?v=14">
   <link rel="stylesheet" href="movie-studio.css?v=guide-1">
 </head>
 <body>
@@ -38,7 +38,7 @@
         <div class="stage-hint" id="stageHint">示意角色 · 摄像头未开启</div><button type="button" id="closeExpanded" class="exit-expanded" hidden>退出放大</button>
       </section>
       <div class="stage-toolbar"><div class="toolbar-left"><span id="mirrorLabel">◉ 前置镜像</span><span id="performance">3D 全身跟随</span></div><div class="toolbar-actions"><button class="text-button" id="preview3d" type="button">查看 3D 角色</button><button class="text-button" id="demo" type="button">台词示例</button></div></div>
-      <div class="camera-tools"><button type="button" id="expandStage">放大舞台</button><button type="button" id="wideMode">横屏多人取景</button><button type="button" id="switchCamera">切换到后置</button><span>建议 2–4 人横排，镜头拍到头部和双脚</span></div><p id="cameraNotice" class="camera-notice" hidden></p>
+      <div class="camera-tools"><button type="button" id="expandStage">放大舞台</button><button type="button" id="wideMode">横屏多人取景</button><button type="button" id="switchCamera">切换到后置</button><label>入镜人数 <select id="participantLimit" aria-label="实际入镜人数"><option value="1">1 人</option><option value="2" selected>2 人</option><option value="3">3 人</option><option value="4">4 人</option></select></label><label>画面 <select id="stageQuality" aria-label="画面质量"><option value="smooth">流畅</option><option value="balanced" selected>均衡</option><option value="clear">清晰</option></select></label><button type="button" id="calibrateFace">校准正脸</button><span>横排站立，面部、肩膀和手腕保持可见</span></div><p id="cameraNotice" class="camera-notice" hidden></p>
       <div id="filmLiveControls" class="film-live-controls" hidden><span><b>本局录制中</b><span id="filmLiveTimer">0 秒</span><span id="filmLiveCount">0 个动作</span></span><button type="button" id="filmLiveFinish">结束并生成短片</button></div>
       <section id="filmCue" class="film-cue" hidden aria-label="当前拍摄动作提示"><div class="film-cue-top"><b id="filmCueStep">第 1 / 6 幕</b><button type="button" id="filmGuideRetry" disabled>重拍刚才一幕</button></div><h3 id="filmCueAction">请准备动作</h3><p id="filmCueTip"></p><p id="filmCueState" role="status" aria-live="polite"></p><progress id="filmCueProgress" max="6" value="0" aria-label="已完成的分镜数量"></progress><p id="filmCueContext" class="film-cue-context"></p><small id="filmCueNext"></small></section>
       <section class="cast-section" aria-label="入镜玩家"><h2 class="cast-caption">本场演员</h2><div class="players" id="players"></div><p class="players-note">点击角色卡更换形象。举手、挥手、抱头或展开双臂，试试下一秒的剧情。</p></section>
@@ -81,14 +81,15 @@
 </main>
 <dialog id="previewDialog" class="preview-dialog"><header><div><h2>3D 全身角色预览</h2><p>立体网格演示 · 不开启摄像头</p></div><button type="button" id="closePreview">关闭</button></header><canvas id="avatarPreview" width="1200" height="580"></canvas><p id="previewMessage" role="status">正在准备 3D 模型…</p><div class="preview-controls"><label>角色<select id="previewAnimal"><option value="-2">人物 · 八款</option><option value="-1">动物 · 四款</option><option value="4">Snow</option><option value="5">金发男生</option><option value="6">锁骨发女生</option><option value="7">长发女生</option><option value="8">Rain</option><option value="9">动漫男孩</option><option value="10">森林游侠</option><option value="11">精灵女生</option><option value="0">狐狸</option><option value="1">兔子</option><option value="2">小熊</option><option value="3">青蛙</option></select></label><label>视图<select id="previewFraming"><option value="full">全身（含双脚）</option><option value="face">面部</option></select></label><label>动作<select id="previewAction"><option value="stand">站立</option><option value="forehead">扶额</option><option value="head">双手抱头</option><option value="turn">转头</option><option value="raise">单手举高</option><option value="handsup">双手举高</option><option value="wave">挥手</option><option value="arms">展开双臂</option><option value="tilt">歪头</option><option value="mouth">张嘴</option><option value="squat">下蹲</option><option value="step">抬腿</option></select></label><label>左右转头<input id="previewYaw" type="range" min="-70" max="70" value="0"></label><label>抬头 / 低头<input id="previewPitch" type="range" min="-35" max="35" value="0"></label><label class="auto-rotate"><input type="checkbox" id="previewAuto" checked>自动转动</label></div></dialog>
 <script src="characters.js?v=12"></script>
-<script src="motion.js?v=12"></script>
+<script src="motion.js?v=14"></script>
+<script src="vision-client.js?v=14"></script>
 <script src="movie-story.js?v=guide-1"></script>
 <script src="movie-guide.js?v=1"></script>
-<script src="movie-studio.js?v=guide-1"></script>
+<script src="movie-studio.js?v=14"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
-const APP_BUILD = 'V1.3 · 按剧本提示拍摄', AI_VERSION = '0.10.21', MAX_PLAYERS = 4;
+const APP_BUILD = 'V1.4 · 多人流畅版', AI_VERSION = '0.10.21', MAX_PLAYERS = 4;
 const video = $('video'), canvas = $('canvas'), ctx = canvas.getContext('2d');
 const frame = document.createElement('canvas'), frameCtx = frame.getContext('2d');
 const avatars=Characters.all.map(character=>({...character}));
@@ -114,25 +115,23 @@ function spriteStyle(element,avatar) {
 }
 async function loadHumanPortraits(){
   const imageFrom=src=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=src;});
-  try{
-    if(!stream)status('正在载入八位 3D 角色…');
-    const renderer=await initAvatar3D();if(!renderer)throw new Error('3D 角色未能加载');
-    for(const {a,i} of avatars.map((a,i)=>({a,i})).filter(item=>item.a.group==='human')){
-      const item={id:'thumb-'+i,avatar:i,snap:true,demoPose:'stand',observation:{x:.5,y:.5,rotation:{yaw:.06,pitch:0,roll:0}}};
-      a.portrait=renderer.draw([item],512,512).toDataURL('image/png');
-      a.bust=renderer.draw([{...item,portrait:true}],512,512).toDataURL('image/png');
+  await Promise.all(avatars.map(async(a,i)=>{if(a.group!=='human')return;
+    try{a.portrait='assets/portraits/'+i+'-head.png';a.bust='assets/portraits/'+i+'-bust.png';
       [a.headImage,a.bustImage]=await Promise.all([imageFrom(a.portrait),imageFrom(a.bust)]);
-    }
-    renderAvatars();renderPlayers(true);
-    if(!stream){drawDemo(demoMode?performance.now()-demoStarted:0);if(!demoMode&&!loading)status('八位人物角色已就绪。选好形象，再开启摄像头。');}
-    log('八位真实 3D 人物及角色卡已就绪');
-  }catch(e){log('人物预览未能生成：'+errorText(e));if(!stream)status('人物模型加载失败，请检查本地模型文件后刷新。','error');}
+    }catch(e){log('角色预览图未读取：'+a.name);}
+  }));
+  renderAvatars();renderPlayers(true);if(!stream)drawDemo(0);log('角色卡已就绪');
+  const renderer=await initAvatar3D();if(renderer&&!stream&&!demoMode)drawDemo(0);
 }
 const texts=Object.fromEntries(Object.entries(Motion.actions).map(([key,value])=>[key,value.lines]));
 const actionNames=Object.fromEntries(Object.entries(Motion.actions).map(([key,value])=>[key,value.name])),levels=['普通','夸张','离谱'];
 let cameraFacing='user',mirror=true,avatar3D=null,avatarModule=null,avatarImport=null,expanded=false,avatarRendererPromise=null;
 let previewRenderer=null,previewRaf=0,previewToken=0,orientationTimer=0;
 let stream = null, face = null, pose = null, aiPromise = null;
+let visionClient=null,loadedParticipantLimit=0,inferenceBusy=false,inferenceSession=0,inferenceCost=100,faceCalibration=null;
+const qualityPresets={smooth:{width:960,height:540,capture:960,fps:20},balanced:{width:1200,height:675,capture:1280,fps:25},clear:{width:1200,height:675,capture:1280,fps:30}};
+function qualityPreset(){return qualityPresets[$('stageQuality').value]||qualityPresets.balanced;}
+function participantLimit(){return Math.max(1,Math.min(4,+$('participantLimit').value||2));}
 let loading = false, performing = false, demoMode = false, session = 0, raf = 0;
 let lastStageRender=0,lastSceneObservations=[],lastSceneExtras=[];
 let lastVideoTime = -1, lastInference = -Infinity, lastGlobalFire = -Infinity, clearTimer = 0;
@@ -153,6 +152,8 @@ function setButtons() {
   $('stop').disabled=!stream&&!demoMode&&!loading;
   $('demo').disabled=loading||!!stream;
   $('demo').textContent=demoMode?'退出示例':'台词示例';
+  $('participantLimit').disabled=loading||!!stream;
+  $('calibrateFace').disabled=loading||!stream;
   $('switchCamera').disabled=loading;
   $('switchCamera').textContent=cameraFacing==='user'?'切换到后置':'切换到前置';
 }
@@ -193,7 +194,7 @@ function renderPlayers(force=false) {
     $('players').append(button);
   }
   const count=tracks.filter(t=>t.visible).length;
-  $('playerCount').textContent=(demoMode?'示意 · ':'')+count+' / '+MAX_PLAYERS+' 人入镜';
+  $('playerCount').textContent=(demoMode?'示意 · ':'')+count+' / '+participantLimit()+' 人入镜';
 }
 function ellipse(x,y,rx,ry,fill,stroke) {
   ctx.beginPath();ctx.ellipse(x,y,Math.max(rx,.01),Math.max(ry,.01),0,0,Math.PI*2);if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2.8;ctx.stroke();}
@@ -212,11 +213,16 @@ function drawAvatar(cx,cy,rx,ry,angle,avatar) {
   }
   ctx.restore();
 }
+let stageBackdrop=null;
 function drawStageBackground(w,h){
-  ctx.clearRect(0,0,w,h);const gradient=ctx.createLinearGradient(0,0,w,h);
-  gradient.addColorStop(0,'#d1ddc3');gradient.addColorStop(.6,'#edf0dc');gradient.addColorStop(1,'#f6eedb');ctx.fillStyle=gradient;ctx.fillRect(0,0,w,h);
-  ctx.save();ctx.filter='blur(24px)';ellipse(w*.80,h*.18,w*.24,h*.15,'#fff9dc99');ellipse(0,h*.45,w*.065,h*.25,'#92b47b66');ellipse(w,h*.63,w*.09,h*.27,'#b3c39766');ctx.restore();
-  ellipse(w*.5,h*.87,w*.46,h*.13,'#c1cfad66');
+  if(!stageBackdrop||stageBackdrop.width!==w||stageBackdrop.height!==h){
+    stageBackdrop=document.createElement('canvas');stageBackdrop.width=w;stageBackdrop.height=h;
+    const c=stageBackdrop.getContext('2d'),gradient=c.createLinearGradient(0,0,w,h);
+    gradient.addColorStop(0,'#d1ddc3');gradient.addColorStop(.6,'#edf0dc');gradient.addColorStop(1,'#f6eedb');c.fillStyle=gradient;c.fillRect(0,0,w,h);
+    const blob=(x,y,rx,ry,color)=>{c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fillStyle=color;c.fill();};
+    c.save();c.filter='blur(24px)';blob(w*.80,h*.18,w*.24,h*.15,'#fff9dc99');blob(0,h*.45,w*.065,h*.25,'#92b47b66');blob(w,h*.63,w*.09,h*.27,'#b3c39766');c.restore();blob(w*.5,h*.87,w*.46,h*.13,'#c1cfad66');
+  }
+  ctx.clearRect(0,0,w,h);ctx.drawImage(stageBackdrop,0,0);
 }
 function drawDemo(t){
   if(canvas.width!==1200||canvas.height!==660){canvas.width=1200;canvas.height=660;}
@@ -238,14 +244,14 @@ function faceObservation(points,matrix,blendshapes) {
   const left=points[33],right=points[263],top=points[10],chin=points[152];
   const w=frame.width||video.videoWidth||1,h=frame.height||video.videoHeight||1,blend=Object.fromEntries((blendshapes?.categories||[]).map(c=>[c.categoryName,c.score]));
   const rotation=Motion.headPose(points,w,h,matrix),expression={jaw:blend.jawOpen||0,blinkLeft:blend.eyeBlinkLeft||0,blinkRight:blend.eyeBlinkRight||0};
-  return {x:(minX+maxX)/2,y:(minY+maxY)/2,rx:Math.max((maxX-minX)/2,.015),ry:Math.max((maxY-minY)/2,.02),angle:Math.atan2((right.y-left.y)*video.videoHeight,(right.x-left.x)*video.videoWidth),points,pose:null,top,chin,rotation,expression,aspect:w/h,blendshapes:blendshapes?.categories||[]};
+  return {x:(minX+maxX)/2,y:(minY+maxY)/2,rx:Math.max((maxX-minX)/2,.015),ry:Math.max((maxY-minY)/2,.02),angle:Math.atan2((right.y-left.y)*video.videoHeight,(right.x-left.x)*video.videoWidth),points,pose:null,top,chin,rotation,expression,aspect:w/h,frameWidth:w,blendshapes:blendshapes?.categories||[]};
 }
 function poseHead(points) {
   if(!points?.[0]||(points[0].visibility??1)<.45) return null;
   const visible=points.slice(0,11).filter(p=>(p.visibility??1)>.45),nose=points[0];
   const spread=visible.length>1?Math.max(...visible.map(p=>p.x))-Math.min(...visible.map(p=>p.x)):0;
   const shoulder=points[11]&&points[12]?distance(points[11],points[12]):.15;
-  return {x:nose.x,y:nose.y-.015,rx:Math.max(spread*.72,shoulder*.27,.04),ry:Math.max(spread*.95,shoulder*.35,.055),angle:0,points:null,pose:points};
+  return {x:nose.x,y:nose.y-.015,rx:Math.max(spread*.72,shoulder*.27,.04),ry:Math.max(spread*.95,shoulder*.35,.055),angle:0,points:null,pose:points,aspect:(frame.width||video.videoWidth||1)/(frame.height||video.videoHeight||1),frameWidth:frame.width||video.videoWidth};
 }
 // Match the two independent model outputs by head position, never by array index.
 function observationsFor(faces,poses,matrices=[],blendshapes=[],worldPoses=[]) {
@@ -257,7 +263,7 @@ function observationsFor(faces,poses,matrices=[],blendshapes=[],worldPoses=[]) {
 }
 function newTrack(o,t) {
   const id=nextId++,choices=avatars.map((a,i)=>({a,i})).filter(({a})=>a.group===avatars[defaultAvatar].group).map(({i})=>i);
-  return {id,avatar:choices[(choices.indexOf(defaultAvatar)+id-1)%choices.length],x:o.x,y:o.y,rx:o.rx,ry:o.ry,angle:o.angle,lastSeen:t,visible:true,stable:null,stableSince:t,armed:true,lastFire:-Infinity,action:null,observation:o,lastRotation:o.rotation};
+  return {id,avatar:choices[(choices.indexOf(defaultAvatar)+id-1)%choices.length],x:o.x,y:o.y,rx:o.rx,ry:o.ry,angle:o.angle,lastSeen:t,visible:true,stable:null,stableSince:t,armed:true,lastFire:-Infinity,action:null,observation:o,lastRotation:o.rotation,lastObservation:o};
 }
 function updateTracks(observations,t) {
   // Disappearance expires after 1.2 s; no biometric identity recognition is used.
@@ -268,7 +274,7 @@ function updateTracks(observations,t) {
   }));candidates.sort((a,b)=>a.cost-b.cost);
   const usedTracks=new Set(),usedObs=new Set();
   for(const {i,j} of candidates){if(usedTracks.has(i)||usedObs.has(j))continue;
-    const track=tracks[i],o=observations[j];if(o.rotation)track.lastRotation=o.rotation;else o.rotation=track.lastRotation;Object.assign(track,{x:o.x,y:o.y,rx:o.rx,ry:o.ry,angle:o.angle,lastSeen:t,visible:true,observation:o});usedTracks.add(i);usedObs.add(j);
+    const track=tracks[i],o=observations[j];if(o.rotation)track.lastRotation=o.rotation;else o.rotation=track.lastRotation;Object.assign(track,{x:o.x,y:o.y,rx:o.rx,ry:o.ry,angle:o.angle,lastSeen:t,visible:true,observation:o,lastObservation:o});usedTracks.add(i);usedObs.add(j);
   }
   observations.forEach((o,j)=>{if(!usedObs.has(j)&&tracks.length<MAX_PLAYERS){tracks.push(newTrack(o,t));usedObs.add(j);}});
   // Unassigned detections still receive anonymous masks, even if the four player slots are full.
@@ -278,13 +284,14 @@ function updateTracks(observations,t) {
 function detect(p,f,track,t=0) { return Motion.classify(p,f,track,t); }
 function processActions(t) {
   for(const track of tracks){
-    if(!track.visible){track.stable=null;track.stableSince=t;continue;}
+    if(!track.visible){track.waveState=null;track.waveUntil=0;track.stable=null;track.stableSince=t;continue;}
+    if(track.lastActionSample!==undefined&&t-track.lastActionSample>550){track.stable=null;track.waveState=null;track.waveUntil=0;}track.lastActionSample=t;
     const action=detect(track.observation?.pose,track.observation?.points,track,t);track.action=action;
     if(action!==track.stable){track.stable=action;track.stableSince=t;}
     if((action==='raise'||action==='handsup')&&t<(track.waveMovingUntil||0))track.stableSince=t;
     if(!action&&t-track.stableSince>=300)track.armed=true;
     const holdTime=action==='raise'||action==='handsup'?650:240;
-    if(performing&&action&&track.armed&&t-track.stableSince>=holdTime&&t-track.lastFire>=2200&&t-lastGlobalFire>=1700){
+    if(performing&&!faceCalibration&&action&&track.armed&&t-track.stableSince>=holdTime&&t-track.lastFire>=2200&&t-lastGlobalFire>=1700){
       if(window.movieStudio?.allowAction&&!window.movieStudio.allowAction(action,track,t))continue;
       fire(action,track,t);track.armed=false;
     }
@@ -294,24 +301,43 @@ function updateCameraLayout(w,h){
   $('stage').style.setProperty('--camera-aspect','16 / 9');$('stage').classList.add('live');document.body.classList.add('camera-live');
   const portrait=h>w;
   $('cameraNotice').hidden=!portrait;
-  if(portrait)$('cameraNotice').textContent='当前摄像头为竖屏（'+w+' × '+h+'）。卡通舞台保持完整显示；多人请横放手机，并让镜头拍到头部和双脚。';
+  if(portrait)$('cameraNotice').textContent='当前摄像头为竖屏（'+w+' × '+h+'）。卡通舞台保持完整显示；多人请横放手机，并让面部、肩膀和手腕保持可见。';
+}
+// Stage positions belong to actor IDs, not to the distance between two faces.
+function stageActors(actors,t){
+  const visible=actors.filter(p=>p.visible||t-p.lastSeen<350).sort((a,b)=>a.id-b.id);
+  visible.forEach((p,i)=>{p.stageX=(i+.5)/visible.length;});return visible;
+}
+function sampleCalibration(t){
+  if(!faceCalibration)return;
+  for(const track of tracks.filter(p=>p.visible)){
+    const metrics=Motion.faceMetrics(track.observation?.points,track.observation?.aspect||1,track.observation?.frameWidth);
+    if(metrics){const samples=faceCalibration.samples.get(track.id)||[];samples.push(metrics);faceCalibration.samples.set(track.id,samples);}
+  }
+  if(t<faceCalibration.until)return;
+  let calibrated=0;
+  for(const track of tracks){const samples=faceCalibration.samples.get(track.id)||[];if(samples.length<4)continue;
+    track.neutralFace=Object.fromEntries(['roll','projection','mouth'].map(key=>[key,samples.reduce((sum,m)=>sum+m[key],0)/samples.length]));
+    track.stable=null;track.armed=true;calibrated++;
+  }
+  faceCalibration=null;status(calibrated?'已校准 '+calibrated+' 位演员的正脸。可以开始做动作。':'校准时未取得足够的正脸画面，请面向镜头后重试。',calibrated?'ok':'error');
 }
 function renderCamera(observations,extras,t=performance.now()){
-  if(!frame.width||!frame.height)return;const w=1200,h=675;
+  if(!frame.width||!frame.height)return;const {width:w,height:h}=qualityPreset();
   if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
   updateCameraLayout(frame.width,frame.height);drawStageBackground(w,h);
-  const visible=tracks.filter(p=>p.visible),count=Math.max(visible.length,1);
-  const items=visible.map(track=>({id:track.id,avatar:track.avatar,action:track.action,fullBody:track.avatar>=4,observedAt:track.lastSeen,slotCount:count,stageX:Math.max(.09,Math.min(.91,track.x)),
-    observation:track.avatar>=4?track.observation:{...track.observation,y:.46,rx:Math.min(.13,.27/count),ry:.17}}));
+  const visible=stageActors(tracks,t),count=Math.max(visible.length,1);
+  const items=visible.map(track=>({id:track.id,avatar:track.avatar,action:track.action,fullBody:track.avatar>=4,observedAt:track.lastSeen,slotCount:count,stageX:track.stageX,
+    observation:track.avatar>=4?(track.observation||track.lastObservation):{...(track.observation||track.lastObservation),x:track.stageX,y:.46,rx:Math.min(.13,.27/count),ry:.17}}));
   for(const item of items)ellipse((mirror?1-item.stageX:item.stageX)*w,h*.87,Math.min(w/count*.25,95),h*.02,'#788f5e25');
   ctx.save();if(mirror){ctx.translate(w,0);ctx.scale(-1,1);}
   if(avatar3D){try{ctx.drawImage(avatar3D.draw(items,w,h,t),0,0,w,h);}catch(e){log('3D 舞台绘制失败：'+errorText(e));avatar3D.dispose();avatar3D=null;}}
   if(!avatar3D)for(const item of items)drawAvatar(item.stageX*w,h*.45,w*.07,h*.13,0,item.avatar);
   ctx.restore();
   ctx.font=`600 ${Math.max(12,w/65)}px sans-serif`;ctx.textAlign='center';
-  for(const track of visible){const x=(mirror?1-Math.max(.09,Math.min(.91,track.x)):Math.max(.09,Math.min(.91,track.x)))*w,label=playerName(track.id),labelWidth=ctx.measureText(label).width+22,y=h*.95;
+  for(const track of visible){const x=(mirror?1-track.stageX:track.stageX)*w,label=playerName(track.id),labelWidth=ctx.measureText(label).width+22,y=h*.95;
     ctx.fillStyle='#415837dd';ctx.beginPath();ctx.roundRect(x-labelWidth/2,y-19,labelWidth,28,10);ctx.fill();ctx.fillStyle='#fff6da';ctx.fillText(label,x,y+1);}
-  $('stageHint').textContent=visible.length?(visible.some(track=>avatars[track.avatar].group==='human')?'全身卡通舞台 · 镜头未拍到的腿脚保持站姿':'动物角色舞台 · 转头、眨眼和张嘴跟随'):'等待演员入镜 · 镜头请拍到头部与双脚';
+  $('stageHint').textContent=visible.length?(visible.some(track=>avatars[track.avatar].group==='human')?'独立角色站位 · 镜头未拍到的腿脚保持站姿':'动物角色舞台 · 转头、眨眼和张嘴跟随'):'等待演员入镜 · 请让面部、肩膀和手腕入镜';
   $('mirrorLabel').textContent=mirror?'◉ 镜像跟随':'◉ 正向跟随';
 }
 // Nine action IDs use the MP3 files in assets/sounds/.
@@ -379,7 +405,7 @@ async function makeDetector(Class,vision,path,options,label) {
   for(const delegate of ['GPU','CPU']){try{if(loading)status('正在准备'+label+'（'+delegate+'）…');const detector=await Class.createFromOptions(vision,{baseOptions:{modelAssetPath:path,delegate},runningMode:'VIDEO',...options});log(label+' '+delegate+' 已就绪');return detector;}catch(e){log(label+' '+delegate+' 失败：'+errorText(e));}}
   return null;
 }
-async function loadAI() {
+async function loadMainAI() {
   if(face&&pose)return;if(aiPromise)return aiPromise;
   aiPromise=(async()=>{
     const sources=['https://cdn.jsdelivr.net/npm','https://unpkg.com'];const base='https://storage.googleapis.com/mediapipe-models/';
@@ -387,23 +413,52 @@ async function loadAI() {
       if(loading)status('正在下载识别模型，首次加载需要一些时间…');const root=source+'/@mediapipe/tasks-vision@'+AI_VERSION;
       const mod=await import(root+'/vision_bundle.mjs'),lib=mod.FaceLandmarker?mod:mod.default;
       const vision=await lib.FilesetResolver.forVisionTasks(root+'/wasm');
-      if(!face)face=await makeDetector(lib.FaceLandmarker,vision,base+'face_landmarker/face_landmarker/float16/1/face_landmarker.task',{numFaces:8,outputFacialTransformationMatrixes:true,outputFaceBlendshapes:true,minFaceDetectionConfidence:.5,minFacePresenceConfidence:.5,minTrackingConfidence:.5},'多人脸部模型');
+      if(!face)face=await makeDetector(lib.FaceLandmarker,vision,base+'face_landmarker/face_landmarker/float16/1/face_landmarker.task',{numFaces:participantLimit(),outputFacialTransformationMatrixes:true,outputFaceBlendshapes:true,minFaceDetectionConfidence:.5,minFacePresenceConfidence:.5,minTrackingConfidence:.5},'多人脸部模型');
       if(!face)throw new Error('脸部模型加载失败，无法启动人物跟随。请检查网络能否访问模型地址。');
-      if(!pose)pose=await makeDetector(lib.PoseLandmarker,vision,base+'pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',{numPoses:MAX_PLAYERS,minPoseDetectionConfidence:.5,minPosePresenceConfidence:.5,minTrackingConfidence:.5},'多人动作模型');
+      if(!pose)pose=await makeDetector(lib.PoseLandmarker,vision,base+'pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',{numPoses:participantLimit(),minPoseDetectionConfidence:.5,minPosePresenceConfidence:.5,minTrackingConfidence:.5},'多人动作模型');
       if(pose)return;
     }catch(e){log('模型来源 '+source+' 失败：'+errorText(e));}}
     if(!face)throw new Error('人物跟随模型未能加载。请展开诊断检查网络后重试。');
     log('姿态模型不可用，将只识别转头。');
   })();try{await aiPromise;}finally{aiPromise=null;}
 }
-function closeCamera() { window.movieStudio?.finishCapture();if(stream)stream.getTracks().forEach(track=>track.stop());stream=null;video.pause();video.srcObject=null;$('stage').classList.remove('live');document.body?.classList.remove('camera-live');$('cameraNotice').hidden=true; }
+async function loadAI(){
+  const count=participantLimit();
+  if(loadedParticipantLimit===count&&((visionClient&&!visionClient.closed)||(!visionClient&&face&&pose&&!face.background)))return;
+  visionClient?.close();visionClient=null;face?.close?.();pose?.close?.();face=null;pose=null;
+  if(typeof Worker!=='undefined'&&typeof createImageBitmap==='function'&&typeof OffscreenCanvas!=='undefined'){
+    try{
+      status('正在准备后台识别模型 · '+count+' 人…');
+      const client=new VisionClient(log);visionClient=client;await client.init(count);
+      loadedParticipantLimit=count;face={background:true};pose={background:true};log('动作识别在后台运行，不排队积压摄像头帧。');return;
+    }catch(e){log('后台识别未启动：'+errorText(e));visionClient?.close();visionClient=null;}
+  }
+  await loadMainAI();loadedParticipantLimit=count;log('当前使用兼容识别模式。若画面卡顿，请选择流畅画面或更换浏览器。');
+}
+function acceptInference(result,t,token){
+  if(token!==session||!stream)return;
+  const {fr,pr}=result;
+  const observations=observationsFor(fr.faceLandmarks||[],pr?.landmarks||[],fr.facialTransformationMatrixes||[],fr.faceBlendshapes||[],pr?.worldLandmarks||[]),extras=updateTracks(observations,performance.now());
+  sampleCalibration(t);processActions(t);lastSceneObservations=observations;lastSceneExtras=extras;renderPlayers();
+  inferenceCost=inferenceCost*.7+result.ms*.3;
+  $('performance').textContent=(visionClient?'后台识别':'兼容识别')+' '+Math.round(result.ms)+' ms · '+participantLimit()+' 人';
+  $('tag').textContent=(performing?'正在加戏':'摄像头预览')+' · '+tracks.filter(p=>p.visible).length+' 人入镜';
+  const tooSmall=tracks.some(p=>p.visible&&(!p.observation?.points||p.rx<.025));
+  $('maskBadge').textContent=tooSmall?'面部较小或被挡，请靠近并错开站位':extras.length?'舞台最多显示 4 人':avatar3D?'卡通角色跟随已开启':'3D 舞台未就绪';
+}
+function failInference(e){
+  visionClient?.close();visionClient=null;face?.close?.();pose?.close?.();face=null;pose=null;loadedParticipantLimit=0;
+  cancelAnimationFrame(raf);closeCamera();performing=false;drawDemo(0);tracks=[];selectedId=null;renderPlayers(true);renderAvatars();clearEffect();
+  status('识别已停止，请重新连接。'+errorText(e),'error');$('diagnostic').open=true;setButtons();
+}
+function closeCamera() { inferenceSession++;faceCalibration=null;window.movieStudio?.finishCapture();if(stream)stream.getTracks().forEach(track=>track.stop());stream=null;video.pause();video.srcObject=null;$('stage').classList.remove('live');document.body?.classList.remove('camera-live');$('cameraNotice').hidden=true; }
 async function openCamera(token) {
   if(stream?.active)return true;
   if(!window.isSecureContext)throw new Error('摄像头需要 HTTPS 或 localhost。请通过本地服务器或 HTTPS 网站打开。');
   if(!navigator.mediaDevices?.getUserMedia)throw new Error('当前浏览器不支持摄像头，请使用 Chrome、Edge 或 Safari。');
   status('请允许摄像头权限。模型就绪后才会显示处理后的画面。');
   let acquired;
-  try{acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:cameraFacing},width:{ideal:1280},height:{ideal:720},aspectRatio:{ideal:16/9},resizeMode:{ideal:'none'}},audio:false});}
+  try{acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:cameraFacing},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:24,max:30},aspectRatio:{ideal:16/9},resizeMode:{ideal:'none'}},audio:false});}
   catch(e){if(e.name!=='OverconstrainedError')throw e;acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:cameraFacing}},audio:false});}
   if(token!==session){acquired.getTracks().forEach(track=>track.stop());return false;}
   stream=acquired;video.srcObject=acquired;
@@ -411,30 +466,31 @@ async function openCamera(token) {
   acquired.getVideoTracks().forEach(track=>track.addEventListener('ended',()=>{if(stream===acquired){stop();status('摄像头连接已中断，请重新开启。','error');}}));
   await video.play();if(token!==session)return false;updateCameraLayout(video.videoWidth||1280,video.videoHeight||720);return true;
 }
-function loop() {
+function loop(){
   if(!stream||demoMode)return;
   try{
-    const t=performance.now();
-    if(video.readyState>=2&&video.videoWidth>0&&video.currentTime!==lastVideoTime&&t-lastInference>=100){
+    const t=performance.now(),interval=visionClient?90:Math.max(130,inferenceCost*1.3);
+    if(!inferenceBusy&&video.readyState>=2&&video.videoWidth>0&&video.currentTime!==lastVideoTime&&t-lastInference>=interval){
       lastInference=t;lastVideoTime=video.currentTime;
-      const size=Motion.captureSize(video.videoWidth,video.videoHeight,1280);
+      const size=Motion.captureSize(video.videoWidth,video.videoHeight,qualityPreset().capture);
       if(frame.width!==size.width||frame.height!==size.height){frame.width=size.width;frame.height=size.height;}
-      // Snapshot once, then infer and render that SAME frame to avoid mask/frame drift.
       frameCtx.drawImage(video,0,0,frame.width,frame.height);
-      const started=performance.now(),fr=face.detectForVideo(frame,t),pr=pose?.detectForVideo(frame,t);
-      const observations=observationsFor(fr.faceLandmarks||[],pr?.landmarks||[],fr.facialTransformationMatrixes||[],fr.faceBlendshapes||[],pr?.worldLandmarks||[]),extras=updateTracks(observations,t);
-      processActions(t);lastSceneObservations=observations;lastSceneExtras=extras;renderPlayers();
-      $('performance').textContent='识别 '+Math.round(performance.now()-started)+' ms / 帧';
-      $('tag').textContent=(performing?'正在加戏':'摄像头预览')+' · '+tracks.filter(p=>p.visible).length+' 人入镜';
-      $('maskBadge').textContent=extras.length?'已识别更多演员 · 舞台最多显示 4 人':avatar3D?'卡通角色跟随已开启':'3D 舞台未就绪';
+      const token=session,inferToken=++inferenceSession;inferenceBusy=true;
+      const infer=visionClient?visionClient.detect(frame,t):Promise.resolve().then(()=>{
+        const started=performance.now();return {fr:face.detectForVideo(frame,t),pr:pose?.detectForVideo(frame,t),ms:performance.now()-started};
+      });
+      infer.then(result=>{if(inferToken===inferenceSession)acceptInference(result,t,token);})
+        .catch(e=>{if(token===session&&inferToken===inferenceSession)failInference(e);})
+        .finally(()=>{inferenceBusy=false;});
     }
-    if(frame.width&&t-lastStageRender>=33){renderCamera(lastSceneObservations,lastSceneExtras,t);lastStageRender=t;}
-  }catch(e){cancelAnimationFrame(raf);closeCamera();performing=false;ctx.clearRect(0,0,canvas.width,canvas.height);drawDemo(0);$('placeholder').hidden=false;$('tag').textContent='识别已停止';$('maskBadge').textContent='✦ 等待重新连接';tracks=[];selectedId=null;renderPlayers(true);renderAvatars();clearEffect();status('识别中断，摄像头已关闭。'+errorText(e),'error');$('diagnostic').open=true;setButtons();return;}
+    if(frame.width&&t-lastStageRender>=1000/qualityPreset().fps){renderCamera(lastSceneObservations,lastSceneExtras,t);lastStageRender=t;}
+  }catch(e){failInference(e);return;}
   raf=requestAnimationFrame(loop);
 }
 async function connect(perform) {
-  if(loading||performing&&!demoMode)return;primeAudio();
+  if(loading||(performing&&!demoMode&&loadedParticipantLimit===participantLimit()))return;primeAudio();
   if(demoMode){stop();primeAudio();}
+  if(stream&&loadedParticipantLimit!==participantLimit()){stop();primeAudio();}
   if(stream&&face&&!loading){performing=perform;setButtons();status('正在加戏 · 试试扶额、抱头或转头。','ok');return;}
   const token=++session;loading=true;setButtons();$('tag').textContent='片场准备中';$('placeholder').querySelector('h2').textContent='正在准备片场…';
   try{
@@ -442,7 +498,7 @@ async function connect(perform) {
     await initAvatar3D();if(token!==session||!stream)return;
     await loadAI();if(token!==session||!stream)return;
     performing=perform;lastSceneObservations=[];lastSceneExtras=[];lastStageRender=0;lastVideoTime=-1;lastInference=-Infinity;lastGlobalFire=-Infinity;tracks=[];nextId=1;selectedId=null;
-    $('placeholder').hidden=true;status((perform?'正在加戏':'预览已开启')+(pose?' · 最多 4 人，卡通全身跟随，可做举手、挥手、扶额等动作。':' · 动作模型不可用，当前仅支持转头。'),'ok');loop();
+    $('placeholder').hidden=true;status((perform?'正在加戏':'预览已开启')+(pose?' · '+participantLimit()+' 人模式，面部和手腕保持可见。可先点击校准正脸。':' · 动作模型不可用，当前仅支持转头。'),'ok');loop();
   }catch(e){if(token!==session)return;closeCamera();drawDemo(0);$('tag').textContent='连接失败 · 可重试';status('启动失败。'+errorText(e),'error');$('diagnostic').open=true;}
   finally{if(token===session){loading=false;setButtons();}}
 }
@@ -469,13 +525,13 @@ function startDemo() {
 }
 async function loadAvatarModule(){
   if(avatarModule)return avatarModule;
-  avatarImport??=import('./avatar3d.js?v=12');
+  avatarImport??=import('./avatar3d.js?v=14');
   try{avatarModule=await avatarImport;return avatarModule;}catch(e){avatarImport=null;throw e;}
 }
 async function initAvatar3D(){
   if(avatar3D)return avatar3D;if(avatarRendererPromise)return avatarRendererPromise;
   avatarRendererPromise=(async()=>{
-    try{const module=await loadAvatarModule();avatar3D=await module.createAvatarRenderer();log('八位全身人物及动物角色已就绪');return avatar3D;}
+    try{const module=await loadAvatarModule();avatar3D=await module.createAvatarRenderer({initialModels:previewAvatars,onError:e=>log('角色载入失败：'+errorText(e))});log('舞台已就绪，其余人物按需加载');return avatar3D;}
     catch(e){log('3D 初始化失败：'+errorText(e));return null;}
     finally{avatarRendererPromise=null;}
   })();return avatarRendererPromise;
@@ -521,6 +577,7 @@ function renderActionGuide(){
   const tips={forehead:'一只手放到额头附近。',head:'两只手放在头部两侧。',turn:'缓慢向左或向右转头。',raise:'单手举到头顶上方。',handsup:'两只手举过头顶。',wave:'举手后左右挥动两个来回。',arms:'两臂向左右展开，手腕接近肩高。',tilt:'向左肩或右肩歪头。',mouth:'面向镜头张大嘴。'};
   $('actionList').replaceChildren();for(const [key,item] of Object.entries(Motion.actions)){const card=document.createElement('article'),title=document.createElement('h3'),tip=document.createElement('p'),line=document.createElement('p');title.textContent=item.name;tip.textContent=tips[key];line.textContent='夸张档 · '+item.lines[1];card.append(title,tip,line);$('actionList').append(card);}
 }
+$('calibrateFace').addEventListener('click',()=>{if(!stream)return;faceCalibration={until:performance.now()+1800,samples:new Map()};status('正脸校准中，请看向镜头，放下双手并保持自然表情两秒。');});
 $('start').addEventListener('click',()=>connect(true));$('cameraTest').addEventListener('click',()=>connect(false));$('stop').addEventListener('click',stop);$('demo').addEventListener('click',startDemo);$('level').addEventListener('input',updateLevel);
 $('humanTab').addEventListener('click',()=>{avatarGroup='human';renderAvatars();});$('animalTab').addEventListener('click',()=>{avatarGroup='animal';renderAvatars();});
 $('preview3d').addEventListener('click',show3DPreview);$('closePreview').addEventListener('click',close3DPreview);$('previewDialog').addEventListener('cancel',e=>{e.preventDefault();close3DPreview();});
@@ -529,13 +586,13 @@ for(const id of ['previewYaw','previewPitch'])$(id).addEventListener('input',()=
 $('previewAction').addEventListener('change',()=>{$('previewAuto').checked=false;});
 $('expandStage').addEventListener('click',()=>setExpanded(!expanded));$('closeExpanded').addEventListener('click',()=>setExpanded(false));$('wideMode').addEventListener('click',wideView);$('switchCamera').addEventListener('click',switchCamera);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&expanded)setExpanded(false);});document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&expanded)setExpanded(false);});
-window.addEventListener('orientationchange',()=>{clearTimeout(orientationTimer);orientationTimer=setTimeout(async()=>{const track=stream?.getVideoTracks()[0];if(track)try{await track.applyConstraints({width:{ideal:1280},height:{ideal:720},aspectRatio:{ideal:16/9},resizeMode:{ideal:'none'}});}catch(e){log('横屏参数沿用浏览器设置。');}},600);});
+window.addEventListener('orientationchange',()=>{clearTimeout(orientationTimer);orientationTimer=setTimeout(async()=>{const track=stream?.getVideoTracks()[0];if(track)try{await track.applyConstraints({width:{ideal:1280},height:{ideal:720},frameRate:{ideal:24,max:30},aspectRatio:{ideal:16/9},resizeMode:{ideal:'none'}});}catch(e){log('横屏参数沿用浏览器设置。');}},600);});
 $('soundEnabled').addEventListener('change',()=>{if($('soundEnabled').checked)primeAudio();else{stopSound();if(audio)audio.suspend().catch(()=>{});}});
 $('copyLog').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('env').textContent+'\n'+lines.join('\n'));$('copyLog').textContent='已复制';}catch(e){$('copyLog').textContent='请手动选择上方日志复制';}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)close3DPreview();if(document.hidden&&(stream||loading||demoMode)){stop();status('页面已切到后台，摄像头已关闭。需要时可重新开启。');}});
-window.addEventListener('pagehide',()=>{close3DPreview();stopSound();if(audio)audio.suspend().catch(()=>{});session++;loading=false;performing=false;demoMode=false;cancelAnimationFrame(raf);closeCamera();});
+window.addEventListener('pagehide',()=>{close3DPreview();stopSound();if(audio)audio.suspend().catch(()=>{});session++;loading=false;performing=false;demoMode=false;cancelAnimationFrame(raf);closeCamera();visionClient?.close();});
 window.movieStudio=new MovieStudio({canvas,getTracks:()=>tracks,mirrored:()=>mirror,
-  start:()=>connect(true),isPerforming:()=>performing&&!demoMode,stop,
+  start:()=>{$('participantLimit').value=$('filmCastCount').value;return connect(true);},isPerforming:()=>performing&&!demoMode,stop,
   focusStage:()=>$('stage').scrollIntoView({behavior:'smooth',block:'center'}),
   prepareDemo:async()=>{primeAudio();if(!await initAvatar3D())throw new Error('卡通舞台尚未就绪，请检查角色模型文件。');},
   lineForAction:action=>texts[action][+$('level').value],lockLevel:locked=>{$('level').disabled=locked;document.body.classList.toggle('film-guiding',locked);},

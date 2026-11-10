@@ -25,15 +25,29 @@ export async function createCharacterAvatar(index){
 }
 
 /** Independent bones/morphs for four actors; geometry and textures stay shared. */
-export async function createCharacterPool(maxInstances=4){
-  const pools=new Map(await Promise.all(HUMAN_MODELS.map(async model=>[
-    model.index,await Promise.all(Array.from({length:maxInstances},()=>createCharacterAvatar(model.index)))
-  ])));
-  const used=new Set();
+export async function createCharacterPool(maxInstances=4,{initialModels=[]}={}){
+  const pools=new Map(),pending=new Map(),used=new Set();let disposed=false;
+  async function prepare(indices){
+    const counts=new Map();
+    for(const index of indices)if(HUMAN_MODELS.some(m=>m.index===index))counts.set(index,Math.min(maxInstances,(counts.get(index)||0)+1));
+    await Promise.all([...counts].map(async([index,count])=>{
+      // Serialize requests for the same asset; each actor still gets independent bones.
+      const previous=pending.get(index)||Promise.resolve();
+      const next=previous.catch(()=>{}).then(async()=>{
+        const pool=pools.get(index)||[];pools.set(index,pool);
+        while(!disposed&&pool.length<count){const avatar=await createCharacterAvatar(index);if(disposed){avatar.dispose();return;}pool.push(avatar);}
+      });
+      pending.set(index,next);
+      try{await next;}finally{if(pending.get(index)===next)pending.delete(index);}
+    }));
+  }
+  await prepare(initialModels);
   return {
-    acquire(index){const avatar=pools.get(index)?.find(a=>!used.has(a));if(!avatar)throw new Error('人物实例已达到席位上限');used.add(avatar);avatar.demo('stand');avatar.expression();return avatar;},
+    prepare,
+    acquire(index){const avatar=pools.get(index)?.find(a=>!used.has(a));if(!avatar)return null;used.add(avatar);avatar.demo('stand');avatar.expression();return avatar;},
     release(avatar){avatar.root.removeFromParent();used.delete(avatar);},
-    dispose(){for(const pool of pools.values())for(const avatar of pool)avatar.dispose();used.clear();},
-    get size(){return [...pools.values()].reduce((n,p)=>n+p.length,0);}
+    dispose(){disposed=true;for(const pool of pools.values())for(const avatar of pool)avatar.dispose();used.clear();},
+    get size(){return [...pools.values()].reduce((n,p)=>n+p.length,0);},
+    get modelCount(){return [...pools.values()].filter(p=>p.length).length;}
   };
 }
