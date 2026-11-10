@@ -13,7 +13,7 @@
     update(at,{visible=true,neutral=true}={}){
       if(this.complete)return;
       if(this.phase==='hold'){
-        if(at-this.phaseAt>=this.holdMs){
+        if(at-this.phaseAt>=(this.currentHoldMs??this.holdMs)){
           if(this.index===this.plan.scenes.length-1)this.phase='complete';
           else{this.index++;this.phase='neutral';this.phaseAt=at;this.neutralSince=null;}
         }
@@ -36,10 +36,11 @@
     }
     accepts(action,actorId){return !this.paused&&this.phase==='action'&&action===this.step.action&&actorId===this.step.actorId;}
     accept(event,at){
-      if(!this.accepts(event.action,event.actorId))return false;
+      if(at<this.phaseAt||!this.accepts(event.action,event.actorId))return false;
       event.guideStep=this.step.id;
-      event.clipStartMs=Math.max(0,event.timeMs-250);
-      event.clipEndMs=event.timeMs+this.holdMs;
+      event.clipStartMs=Math.max(0,event.cueStartMs??event.timeMs-250);
+      this.currentHoldMs=Math.max(this.holdMs,(event.soundDurationMs||0)+180);
+      event.clipEndMs=event.timeMs+this.currentHoldMs;
       this.accepted[this.index]=event.id;this.phase='hold';this.phaseAt=at;return true;
     }
     redo(at){

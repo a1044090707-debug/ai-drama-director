@@ -24,11 +24,15 @@
         else{this.variant=(+byId('filmStory').value+1)%3;byId('filmStory').value=String(this.variant);this.refreshGuidePreview();this.generate();}
       });
       byId('filmCancel').addEventListener('click',()=>this.cancel());
-      byId('filmRetryTool').addEventListener('click',()=>this.checkHealth());
+      byId('filmRetryTool').addEventListener('click',()=>this.checkHealth(true));
+      byId('filmImportRaw').addEventListener('click',()=>byId('filmImportFile').click());
+      byId('filmImportFile').addEventListener('change',e=>{const file=e.target.files?.[0];if(file)this.convertRaw(file);e.target.value='';});
       byId('filmTheme').addEventListener('change',()=>{this.refreshGuidePreview();if(this.blob&&!this.busy)this.previewPlan();});
       for(const id of ['filmMode','filmStory','filmCastCount',...DEFAULT_NAMES.map((_,i)=>'filmName'+i)]){
         byId(id).addEventListener(id.startsWith('filmName')?'input':'change',()=>{this.refreshGuidePreview();this.update();});
       }
+      byId('filmSound').addEventListener('change',()=>{if(this.blob&&!this.busy)this.previewPlan();});
+      byId('filmExportMode').addEventListener('change',()=>{if(this.blob&&!this.busy)this.previewPlan();this.update();});
       byId('filmGuideRetry').addEventListener('click',()=>this.redoGuide());
       byId('filmVoice').addEventListener('change',()=>{if(!byId('filmVoice').checked)root.speechSynthesis?.cancel();});
     }
@@ -36,31 +40,49 @@
       byId('filmStatus').textContent=text;
       byId('filmStatus').classList.toggle('film-error',error);
     }
-    async checkHealth(){
-      try{
-        const response=await fetch('/api/movie-health',{cache:'no-store'});
-        if(!response.ok)throw new Error('请使用本版本的 start.cmd 启动网页。');
-        this.health=await response.json();
-        const state=this.health.state;
-        byId('filmToolStatus').textContent=state==='ready'?'视频工具已就绪':state==='error'?'视频工具未就绪':
-          '首次启动正在准备视频工具，请稍等';
-        byId('filmToolStatus').title=this.health.message||'';
-        byId('filmRetryTool').hidden=state!=='error';
-        if(state==='error')this.message(this.health.message,true);
-        else if(state!=='ready')setTimeout(()=>this.checkHealth(),2500);
-      }catch(error){
-        this.health={ready:false,state:'error'};
-        byId('filmToolStatus').textContent='未连接到本地视频服务';byId('filmRetryTool').hidden=false;
-        this.message(error.message||'请通过 start.cmd 启动本项目。',true);
+    exporter(){return this.exporterPromise??=(import('./browser-movie-export.mjs?v=16').then(api=>{this.exporterAPI=api;return api;}).catch(error=>{this.exporterPromise=null;throw error;}));}
+    async checkHealth(announce=false){
+      if(this.healthPromise)return this.healthPromise;
+      clearTimeout(this.healthTimer);this.health={ready:false,state:'checking'};
+      byId('filmRetryTool').disabled=true;byId('filmRetryTool').hidden=false;byId('filmRetryTool').textContent='正在检查…';
+      byId('filmToolStatus').textContent='正在检查导出能力…';if(announce)this.message('正在检查 MP4 导出能力…');this.update();
+      this.healthPromise=(async()=>{
+        const local=!root.location||['localhost','127.0.0.1','[::1]'].includes(root.location.hostname);
+        if(local){
+          const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4000);
+          try{
+            const response=await fetch('/api/movie-health',{cache:'no-store',signal:controller.signal});
+            if(!response.ok)throw new Error('本地视频服务不可用');
+            const data=await response.json();if(!['ready','preparing','checking','error'].includes(data.state))throw new Error('视频服务响应无效');
+            this.health={...data,kind:'server'};
+            if(data.state==='ready'||data.state==='preparing'||data.state==='checking'){
+              byId('filmToolStatus').textContent=data.ready?'本地 MP4 导出已就绪':'正在准备本地视频工具…';
+              if(!data.ready)this.healthTimer=setTimeout(()=>this.checkHealth(),2500);
+              if(announce||!data.ready)this.message(data.ready?'本地视频服务已连接，可以生成 MP4。':data.message||'视频工具准备中，完成后可生成。');
+              return;
+            }
+          }catch(error){/* Static hosting uses the browser exporter below. */}
+          finally{clearTimeout(timer);}
+        }
+        try{
+          const exporter=await this.exporter(),support=await exporter.capability();
+          this.health={...support,state:support.ready?'ready':'error',kind:'browser'};
+          byId('filmToolStatus').textContent=support.ready?'网页 MP4 导出已就绪':'当前浏览器不支持 MP4 导出';
+          if(announce||!support.ready)this.message(support.message,!support.ready);
+        }catch(error){
+          this.health={ready:false,state:'error',kind:'browser'};byId('filmToolStatus').textContent='网页导出组件未能加载';
+          this.message('导出组件加载失败，请确认 browser-movie-export.mjs 和 vendor 文件已上传，再重新检查。'+error.message,true);
+        }
+      })();
+      try{await this.healthPromise;}finally{
+        this.healthPromise=null;byId('filmRetryTool').disabled=false;byId('filmRetryTool').textContent='重新检查导出能力';
+        this.update();
       }
-      this.update();
-      if(this.pendingAutoGenerate&&this.health?.ready&&!this.recording&&!this.starting&&!this.busy&&this.blob){
-        this.pendingAutoGenerate=false;this.generate();
-      }
+      if(this.pendingAutoGenerate&&this.health?.ready&&!this.recording&&!this.starting&&!this.busy&&this.blob){this.pendingAutoGenerate=false;this.generate();}
     }
     update(){
       const locked=this.recording||this.finalizing||this.busy||this.starting;
-      byId('filmRecord').disabled=locked;
+      byId('filmRecord').disabled=locked;byId('filmImportRaw').disabled=locked;byId('filmRetryTool').disabled=locked||!!this.healthPromise;
       byId('filmDemo').disabled=locked;
       byId('filmFinish').disabled=!this.recording||this.busy;
       byId('filmGenerate').disabled=locked||!this.blob||!this.events.length||!this.health?.ready;
@@ -75,8 +97,8 @@
       byId('filmDurationField').hidden=guided;byId('filmGuideBudget').hidden=!guided;
       byId('filmGuidePreview').hidden=!guided;
       byId('filmRecord').textContent=guided?'开始按剧本拍摄':'开始自由录制';
-      byId('filmFinish').textContent=byId('filmLiveFinish').textContent=this.recording&&this.guide?'提前结束拍摄':'结束并生成短片';
-      for(const id of ['filmMode','filmStory','filmCastCount','filmTheme','filmDuration','filmMusic','filmSound',...DEFAULT_NAMES.map((_,i)=>'filmName'+i)]){
+      byId('filmFinish').textContent=byId('filmLiveFinish').textContent=this.guide?'提前结束，仅保存素材':'结束并生成短片';
+      for(const id of ['filmMode','filmStory','filmCastCount','filmTheme','filmDuration','filmMusic','filmSound','filmExportMode',...DEFAULT_NAMES.map((_,i)=>'filmName'+i)]){
         byId(id).disabled=locked;
       }
       byId('filmVoice').disabled=!root.speechSynthesis;
@@ -123,6 +145,7 @@
     }
     allowAction(action,track,at){
       if(!this.recording||!this.guide)return true;
+      if(at<this.guide.phaseAt)return false;
       this.assignActors();const actorId='actor-'+this.mapping.get(track.id);
       const allowed=this.guide.accepts(action,actorId);
       if(!allowed&&this.guide.phase==='action'&&actorId===this.guide.step.actorId){
@@ -230,13 +253,17 @@
     }
     static recorderType(){
       if(typeof MediaRecorder==='undefined')throw new Error('当前浏览器不支持录制，请使用较新的 Edge 或 Chrome。');
-      return ['video/webm;codecs=vp8','video/webm;codecs=vp9','video/webm','video/mp4']
+      return ['video/mp4;codecs=avc1.42001f','video/mp4','video/webm;codecs=vp8','video/webm;codecs=vp9','video/webm']
         .find(type=>MediaRecorder.isTypeSupported(type))||'';
     }
     async startRound(){
       if(this.recording||this.finalizing||this.busy||this.starting)return;
       this.pendingAutoGenerate=false;this.starting=true;this.update();
       try{
+        if(!this.health||this.health.state==='checking')await this.checkHealth();
+        if(this.health?.kind==='browser'&&!this.health.ready)throw new Error(this.health.message||'当前浏览器无法导出 MP4，请更换浏览器后再拍摄。');
+        this.message('正在准备完整系统台词和音效…');
+        const exporter=await this.exporter();this.soundDurations=await exporter.prepareSounds();
         MovieStudio.recorderType();
         this.message('正在准备摄像头和卡通舞台…');
         await this.adapter.start();
@@ -250,6 +277,10 @@
       if(this.recording||this.finalizing||this.busy||this.starting)return;
       this.pendingAutoGenerate=false;this.starting=true;this.update();
       try{
+        if(!this.health||this.health.state==='checking')await this.checkHealth();
+        if(this.health?.kind==='browser'&&!this.health.ready)throw new Error(this.health.message||'当前浏览器无法导出 MP4，请更换浏览器后再拍摄。');
+        this.message('正在准备完整系统台词和音效…');
+        const exporter=await this.exporter();this.soundDurations=await exporter.prepareSounds();
         MovieStudio.recorderType();this.message('正在准备示例演出…');
         await this.adapter.prepareDemo();
         this.adapter.demo(byId('filmMode').value==='guided'?(+byId('filmCastCount').value||1):null);this.beginCapture(true);
@@ -257,6 +288,7 @@
       finally{this.starting=false;this.update();}
     }
     beginCapture(demo){
+      byId('filmPlayer').pause?.();byId('filmRawPlayer').pause?.();
       const mimeType=MovieStudio.recorderType();
       if(!this.capture.captureStream)throw new Error('当前浏览器无法录制卡通舞台，请使用 Edge 或 Chrome。');
       this.captureStream=this.capture.captureStream(24);
@@ -265,11 +297,11 @@
       this.isDemo=demo;this.slots=this.actorNames().map((name,i)=>({name,x:(i+.5)/4}));
       this.guidePlan=byId('filmMode').value==='guided'?this.selectedGuide():null;
       this.guide=null;this.lastSpoken=null;this.guideFeedback=null;
-      this.maxSeconds=this.guidePlan?180:demo?23:Math.min(90,+byId('filmDuration').value||60);
+      this.maxSeconds=this.guidePlan?180:demo?23:Math.min(180,+byId('filmDuration').value||60);
       this.parts=[];this.totalBytes=0;this.captureError=null;this.lastRoster='';
       byId('filmRoster').replaceChildren();byId('filmStoryboard').replaceChildren();
       byId('filmProgress').value=0;byId('filmRaw').hidden=true;
-      byId('filmPlanDetails').hidden=true;
+      byId('filmPlanDetails').hidden=true;byId('filmResult').hidden=true;byId('filmRawPreview').hidden=true;
       this.stopPromise=new Promise(resolve=>{
         this.recorder.ondataavailable=event=>{
           if(event.data.size){this.parts.push(event.data);this.totalBytes+=event.data.size;}
@@ -280,7 +312,10 @@
           this.blob=new Blob(this.parts,{type:this.recorder.mimeType||'video/webm'});this.parts=[];
           if(this.rawUrl)URL.revokeObjectURL(this.rawUrl);
           this.rawUrl=URL.createObjectURL(this.blob);
-          const link=byId('filmRaw');link.href=this.rawUrl;link.download=(this.isDemo?'示例演出':'本局卡通素材')+'.'+(this.blob.type.includes('mp4')?'mp4':'webm');link.hidden=false;
+          const link=byId('filmRaw'),mp4=this.blob.type.includes('mp4');link.href=this.rawUrl;link.download=(this.isDemo?'示例演出原始素材':'本局卡通原始素材')+'.'+(mp4?'mp4':'webm');link.hidden=false;
+          link.textContent='保存原始素材（'+(mp4?'MP4':'WebM，部分系统播放器不支持')+'）';
+          byId('filmRawPlayer').src=this.rawUrl;byId('filmRawPreview').hidden=false;
+          if(this.blob.size<128){this.captureError='录制素材为空，请重新拍摄。';this.blob=null;link.hidden=true;byId('filmRawPreview').hidden=true;}
           if(this.captureError)this.message(this.captureError,true);
           else this.message(this.guide&&!this.guide.complete?'拍摄提前结束，已保存素材。请重新完成六幕剧本后生成短片。':`本局已保存 ${this.events.length} 个动作，可以生成短片。`);
           this.finalizing=false;this.previewPlan();this.update();resolve(this.blob);
@@ -321,10 +356,12 @@
     recordEvent({action,track,line,level,at}){
       if(!this.recording||at<this.startMs)return;
       this.assignActors();const slot=this.mapping.get(track.id);
-      if(slot===undefined||this.events.length>=100)return;
+      if(slot===undefined||this.events.length>=128)return;
       const event={id:'event-'+this.events.length,timeMs:Math.round(at-this.startMs),
         actorId:'actor-'+slot,actorName:this.slots[slot].name,trackId:track.id,avatarId:track.avatar,
-        action,originalLine:line,level,focusX:this.adapter.mirrored()?1-(track.stageX??track.x):(track.stageX??track.x)};
+        action,actionName:root.MovieStory?.ACTIONS[action]||action,originalLine:line,level,focusX:this.adapter.mirrored()?1-(track.stageX??track.x):(track.stageX??track.x)};
+      event.soundDurationMs=Math.round((this.soundDurations?.[action]||0)*1000);
+      if(this.guide)event.cueStartMs=Math.max(0,Math.round(this.guide.phaseAt-this.startMs)-350);
       if(this.guide&&!this.guide.accept(event,at))return;
       this.events.push(event);
       byId('filmEventCount').textContent=this.events.length+' 个动作';
@@ -341,22 +378,28 @@
     }
     async endAndGenerate(){
       if(!this.recording)return;
-      const pending=this.finishCapture();this.adapter.stop();await pending;
+      this.pendingAutoGenerate=false;const pending=this.finishCapture();this.adapter.stop();await pending;
       byId('filmHeading').scrollIntoView?.({behavior:'smooth',block:'start'});
       if(this.guide&&!this.guide.complete){this.message('拍摄已停止，完成 '+this.guide.accepted.length+' / 6 幕。请重新拍完剧本；本局原始素材仍可下载。',true);return;}
+      if(!this.blob||this.captureError){this.message(this.captureError||'录制未能保存，请重试。',true);return;}
       if(this.events.length){
         if(this.health?.ready)await this.generate();
         else if(['checking','preparing'].includes(this.health?.state)){
           this.pendingAutoGenerate=true;this.message('本局素材已保存。视频工具准备完成后会自动生成短片。');
-        }else this.message('本局素材已保存。请检查视频服务，准备好后点击用本局素材生成。',true);
+        }else this.message('本局素材已保存。请重新检查导出能力，或改用支持 MP4 的浏览器。',true);
       }
       else this.message('本局没有触发有效动作。请重新录制，或先试一次示例短片。',true);
     }
     previewPlan(){
       if(!this.events.length)return null;
       if(this.guide&&!this.guide.complete)return null;
-      const plan=this.guide?root.MovieStory.buildGuidedStory(this.guidePlan,this.events):root.MovieStory.buildStory(this.events,{theme:byId('filmTheme').value,variant:+byId('filmStory').value||0});
-      const heading=byId('filmPlanTitle');heading.textContent=plan.title+' · 约 '+Math.round(plan.duration)+' 秒';
+      let plan=this.guide?root.MovieStory.buildGuidedStory(this.guidePlan,this.events):root.MovieStory.buildStory(this.events,{theme:byId('filmTheme').value,variant:+byId('filmStory').value||0});
+      if(this.exporterAPI){
+        const mode=byId('filmExportMode').value==='actions'?'actions':'full';
+        const timeline=this.exporterAPI.buildTimeline(plan,this.events,this.duration,{mode,sound:byId('filmSound').checked,soundDurations:this.soundDurations||{}});
+        plan={...plan,scenes:timeline.scenes,duration:timeline.duration,exportMode:mode,timeline};
+      }
+      const heading=byId('filmPlanTitle');heading.textContent=plan.title+' · '+(plan.exportMode==='full'?'完整过程':'完整动作')+' · 约 '+Math.round(plan.duration)+' 秒';
       const list=byId('filmStoryboard');list.replaceChildren();
       plan.scenes.forEach((scene,index)=>{
         const item=document.createElement('li'),name=document.createElement('b'),narration=document.createElement('p'),original=document.createElement('small');
@@ -366,7 +409,43 @@
       });
       byId('filmPlanDetails').hidden=false;
       byId('filmShortNote').textContent=this.guide?'已按开拍前的六幕剧本完成。更换剧本需要重新拍摄对应动作。':(plan.short?'本局动作较少，将生成较短的故事。':'已兼顾演员出场和动作变化。')+(this.missingActors?.length?' '+this.missingActors.join('、')+'未触发有效动作，本片未分配单独镜头。':'');
+      if(plan.exportMode)byId('filmShortNote').textContent=(plan.exportMode==='full'?'保留整局所有画面和全部动作，系统声音完整加入成片。':'去除幕间准备，保留动作提示后的完整过程和系统声音。')+' 录制 '+this.duration.toFixed(1)+' 秒，预计成片 '+Math.round(plan.duration)+' 秒。';
       return plan;
+    }
+    showResult(blob,plan){
+      if(this.resultUrl)URL.revokeObjectURL(this.resultUrl);if(this.storyUrl)URL.revokeObjectURL(this.storyUrl);
+      this.resultUrl=URL.createObjectURL(blob);this.storyUrl=URL.createObjectURL(new Blob([JSON.stringify(plan,null,2)],{type:'application/json'}));
+      byId('filmPlayer').src=this.resultUrl;byId('filmResult').hidden=false;
+      byId('filmPlayer').onerror=()=>this.message('网页预览未能播放。请下载 MP4 后用系统播放器打开；若仍失败，请保留原始素材后重新生成。',true);
+      byId('filmDownload').href=this.resultUrl;byId('filmDownload').download=plan.title+(plan.exportMode==='full'?'-完整过程':plan.exportMode==='actions'?'-动作分段':'')+'.mp4';
+      byId('filmDownload').textContent=plan.exportMode==='full'?'下载完整 MP4':'下载 MP4';
+      byId('filmStoryDownload').href=this.storyUrl;byId('filmStoryDownload').download=plan.title+'-分镜.json';
+      byId('filmResultTitle').textContent=plan.title;byId('filmProgress').value=100;
+      this.message(plan.exportMode?('完整 MP4 已生成。'+(plan.timeline?.audioCues?.length?'系统动作声音已完整加入音轨。':'本次未勾选成片系统声音。')+'请下载下方 MP4。'):'原始素材已转换为 MP4，保留素材原有的画面与声音。');
+    }
+    async generateBrowser(plan){
+      this.busy=true;const run=++this.runId;this.controller=new AbortController();this.jobId=null;this.update();
+      try{
+        this.message('正在本机浏览器中剪辑，请保持本页面打开…');
+        const exporter=await this.exporter();
+        const result=await exporter.render({blob:this.blob,plan,events:this.events,duration:this.duration,
+          sound:byId('filmSound').checked,music:byId('filmMusic').checked,signal:this.controller.signal,
+          onProgress:(progress,text)=>{if(run===this.runId){byId('filmProgress').value=progress;this.message(text);}}});
+        if(run===this.runId)this.showResult(result,plan);
+      }catch(error){if(run===this.runId)this.message(error.name==='AbortError'?'已取消生成，原始素材仍保留。':error.message,true);}
+      finally{if(run===this.runId){this.busy=false;this.update();}}
+    }
+    async convertRaw(file){
+      if(this.recording||this.busy||this.starting||this.finalizing)return;
+      if(file.size>80*1024*1024){this.message('请转换 80 MB 以内的素材，较大的文件建议使用电脑。',true);return;}
+      this.busy=true;const run=++this.runId;this.controller=new AbortController();this.jobId=null;this.update();
+      try{
+        this.message('正在读取旧素材并转换 MP4，不会补造动作或剧情…');
+        const exporter=await this.exporter();
+        const result=await exporter.convert({blob:file,signal:this.controller.signal,onProgress:(progress,text)=>{if(run===this.runId){byId('filmProgress').value=progress;this.message(text);}}});
+        if(run===this.runId)this.showResult(result,{title:file.name.replace(/\.[^.]+$/,'')+'-MP4',scenes:[],note:'原始素材格式转换，未增加剧情。'});
+      }catch(error){if(run===this.runId)this.message(error.message,true);}
+      finally{if(run===this.runId){this.busy=false;this.update();}}
     }
     async json(url,options={}){
       const response=await fetch(url,options);let data;
@@ -380,6 +459,7 @@
       let plan;
       try{plan=this.previewPlan();if(!plan)throw new Error('本局没有有效动作。');}
       catch(error){this.message(error.message,true);return;}
+      if(this.health.kind==='browser')return this.generateBrowser(plan);
       this.busy=true;const run=++this.runId;this.controller=new AbortController();this.jobId=null;this.update();
       try{
         const signal=this.controller.signal;
@@ -391,7 +471,7 @@
         // Let this small request return its ID even if the user cancels meanwhile,
         // then cancel that known job so it cannot become an orphan renderer.
         const job=await this.json('/api/movie-jobs',{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({recordingId:this.recordingId,duration:this.duration,events:this.events,plan,
+          body:JSON.stringify({recordingId:this.recordingId,duration:this.duration,events:this.events,plan:{...plan,timeline:undefined},
             guide:this.guidePlan,
             sound:byId('filmSound').checked,music:byId('filmMusic').checked,demo:this.isDemo})});
         if(run!==this.runId){
@@ -406,7 +486,8 @@
           if(state.state==='done'){
             const url='/api/movie-jobs/'+job.id+'/video';
             byId('filmPlayer').src=url;byId('filmResult').hidden=false;
-            byId('filmDownload').href=url;byId('filmDownload').download=plan.title+'.mp4';
+            byId('filmDownload').href=url;byId('filmDownload').download=plan.title+(plan.exportMode==='full'?'-完整过程':'-动作分段')+'.mp4';
+            byId('filmDownload').textContent=plan.exportMode==='full'?'下载完整 MP4':'下载 MP4';
             byId('filmStoryDownload').href='/api/movie-jobs/'+job.id+'/story';byId('filmStoryDownload').download=plan.title+'-分镜.json';
             byId('filmResultTitle').textContent=plan.title;
             this.message('短片已生成。可以预览、下载，或换一版剧情。');break;
@@ -425,7 +506,7 @@
       if(!this.busy)return;
       const jobId=this.jobId;this.runId++;this.controller?.abort();this.busy=false;this.update();
       this.message('已取消生成，本局素材仍保留。');
-      if(jobId)try{await this.json('/api/movie-jobs/'+jobId+'/cancel',{method:'POST',body:'{}',headers:{'Content-Type':'application/json'}});}catch{}
+      if(jobId&&this.health?.kind!=='browser')try{await this.json('/api/movie-jobs/'+jobId+'/cancel',{method:'POST',body:'{}',headers:{'Content-Type':'application/json'}});}catch{}
     }
   }
   root.MovieStudio=MovieStudio;

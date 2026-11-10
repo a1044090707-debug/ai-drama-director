@@ -1,7 +1,7 @@
 {
   "project": "ai-drama-director",
-  "version": "1.4.0",
-  "date": "2026-11-10",
+  "version": "1.6.0",
+  "date": "2026-11-11",
   "files": [
     {
       "path": ".gitignore",
@@ -210,8 +210,13 @@
     },
     {
       "path": "avatar3d.js",
-      "bytes": 6875,
-      "sha256": "c24774705056b7970098baee7f0158ac2fa4b83e5beb229ef081c4ee3a99894c"
+      "bytes": 6879,
+      "sha256": "5012652bf31a9c3b8a450dd49fbdb8550afc14b9a02990dbe10bfb1daa142d43"
+    },
+    {
+      "path": "browser-movie-export.mjs",
+      "bytes": 12572,
+      "sha256": "ed689f76e065d6e554721f0703c7ffd085fb39845f91e53b6b146750b19c3e74"
     },
     {
       "path": "character-models.mjs",
@@ -230,8 +235,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 63767,
-      "sha256": "0e54ef394ad1ad7a00c15477de5d701a529791836e437cc602f9b09bb6a4b58b"
+      "bytes": 64914,
+      "sha256": "ab69a3ff6dacb79634ab9e57832f867b7aaa47b4f8eb9d4529cad90b09b33991"
     },
     {
       "path": "jaw-morph.mjs",
@@ -240,8 +245,13 @@
     },
     {
       "path": "model-preview/fullbody/driver.mjs",
-      "bytes": 9650,
-      "sha256": "c46956100e915a2a9dcba3cf936ca568396b978197a954248aeb704ee4bafa2f"
+      "bytes": 10649,
+      "sha256": "bf902216abfa64e1220a9b5e9241a91e6c38d91b3e1fe00e31b40e9c05cdf339"
+    },
+    {
+      "path": "model-preview/fullbody/pose-stabilizer.mjs",
+      "bytes": 3266,
+      "sha256": "32896f06c10dc6c37235671e75f5d6780742937664710b4215cc4337a260afa4"
     },
     {
       "path": "model-preview/rain/assets/rain-web.glb",
@@ -280,8 +290,8 @@
     },
     {
       "path": "movie-guide.js",
-      "bytes": 2469,
-      "sha256": "41d53e3908d4d781df958f6c3e7bbcff9229f1a4825f5d526ca7ffad7077bda6"
+      "bytes": 2668,
+      "sha256": "8e11e78ae8317ea07cc4e7c4009b533dd6c8c8a68205fdf4890da3daccc6e748"
     },
     {
       "path": "movie-story.js",
@@ -290,18 +300,23 @@
     },
     {
       "path": "movie-studio.css",
-      "bytes": 7655,
-      "sha256": "2e5d1eb3ce3c8c059b75e1d977882bcead4332e4c90f7ca72ad9ad1ae77d599f"
+      "bytes": 7868,
+      "sha256": "2dafd368195c998e9335ec393c1455da186f3f3c62140b8917057f8b83bf7197"
     },
     {
       "path": "movie-studio.js",
-      "bytes": 28505,
-      "sha256": "d06ce0947d7b171fb732fe137cb90fb57892da1ec3d24718081a25498de14003"
+      "bytes": 37117,
+      "sha256": "f30cd0315b40880d0d505571c5c5d5426a3fe7ba23fa0e734adfab22a6ee47ee"
+    },
+    {
+      "path": "movie-timeline.mjs",
+      "bytes": 2980,
+      "sha256": "e2d6c4ad1af1ebc01c5791cb8e149462dfcd148728dfa49c5e60a4d32d4e7f48"
     },
     {
       "path": "movie_server.py",
-      "bytes": 25001,
-      "sha256": "9e5f2bf79a445d2bf6f20181f21b2aed057eea1f6a9b0505e08f22662a9c264a"
+      "bytes": 27643,
+      "sha256": "83c2d546956a15272802108783c55f4544c759043c86d9df367d680cb3cc25cd"
     },
     {
       "path": "movie_tools.py",
@@ -315,8 +330,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 14276,
-      "sha256": "78978ccca686c0582f89a614ed507dd4bf7218035e9ed5e017d11f1bc20f7fb2"
+      "bytes": 14905,
+      "sha256": "53e1b7ce3d7f63bb1199875d6f31c00e865a39661572d265c602142e12637f4f"
     },
     {
       "path": "start.cmd",
@@ -339,14 +354,19 @@
       "sha256": "4d383e17df71a846d75e253ce9a71965f56001f0ab9973f05b754f0c9e11efae"
     },
     {
+      "path": "tests/browser-export.test.mjs",
+      "bytes": 1534,
+      "sha256": "f0fafda0facc63f9d59337a027e3915b26a6238a60c7e53ab4d5159aeab49cc5"
+    },
+    {
       "path": "tests/camera-integration.html",
       "bytes": 4463,
       "sha256": "e5beb64c6ab6f4ed420128fbf854c923f7536874f5aa51a51970614c1db876c1"
     },
     {
       "path": "tests/cast-models.test.mjs",
-      "bytes": 2328,
-      "sha256": "6e89778189caa1ab822399a287cec331ca3170ab8cd0b4d35ce85cedbf3818c0"
+      "bytes": 2829,
+      "sha256": "670e6d2658c4c3fc40ab9fe0f890feae063d5b216e5edbefe26576c5ab028ffa"
     },
     {
       "path": "tests/check_chinese_head_scale.py",
@@ -370,8 +390,8 @@
     },
     {
       "path": "tests/movie-guide.test.cjs",
-      "bytes": 4013,
-      "sha256": "e2718b594413602872b82f3c7d982f69a3d8999cdcbb2fde0db44c788a62b8d9"
+      "bytes": 4800,
+      "sha256": "95546ce796f5a9ee0e7da68010cd9b0dd378275b26da32b9021a35b370c94d95"
     },
     {
       "path": "tests/movie-story.test.cjs",
@@ -380,8 +400,13 @@
     },
     {
       "path": "tests/movie-studio.test.cjs",
-      "bytes": 4741,
-      "sha256": "d49bd43c1dd6394a111ddf2bc6d816bbae8c30109a118be02c479c769dd8bb11"
+      "bytes": 6922,
+      "sha256": "7193c28128f996967e52a5ec850e17c858d50095f269ad841b7947a39913c030"
+    },
+    {
+      "path": "tests/movie-timeline.test.mjs",
+      "bytes": 2126,
+      "sha256": "3269b3010c6759e9e0cc20e41e5cdc5d3a369d23cce7f1119171578dbd5bda31"
     },
     {
       "path": "tests/nine-actions-camera.html",
@@ -392,6 +417,11 @@
       "path": "tests/nine-actions.html",
       "bytes": 5510,
       "sha256": "ba9021f1755614b4f73ae6c15a560a863a6758833fb980aff193c51bf15935a1"
+    },
+    {
+      "path": "tests/pose-stabilizer.test.mjs",
+      "bytes": 2067,
+      "sha256": "09aee0538c8ee2792fd167287db143784bc0b08f9a3d738e8425ae54c9d345c2"
     },
     {
       "path": "tests/rain-avatar.test.mjs",
@@ -405,13 +435,13 @@
     },
     {
       "path": "tests/test_movie_render.py",
-      "bytes": 5892,
-      "sha256": "9d3445ad7f9b226a9fc156455a81fdd5fa6df08e7124cb8071b70568b4049ac4"
+      "bytes": 8191,
+      "sha256": "353dce93e02f0bd02829d6e6f952fe3b7f3f67f58b9f73dcf011c0520f15f1a9"
     },
     {
       "path": "tests/test_movie_server.py",
-      "bytes": 5681,
-      "sha256": "68b9234c1d540bb91f81406446d6603ce3172e6fd6ea44545e530aa9ea13c4bd"
+      "bytes": 6424,
+      "sha256": "e457d6a5bf39b1aa911ef6f20f28ca2ebae96c15cac5f01b501538f18eab5ec7"
     },
     {
       "path": "tests/tracking.test.cjs",
@@ -439,6 +469,21 @@
       "sha256": "ce0cf8e3359396c69174ee48be84fc121d4b1146c96ab7bd8e17b916a2359be9"
     },
     {
+      "path": "vendor/mediabunny-1.65.2.mjs",
+      "bytes": 723375,
+      "sha256": "08149edcc8cf980da65d94a0a54a8fc0fa85a65f89b66f55c906f33618363919"
+    },
+    {
+      "path": "vendor/MEDIABUNNY-LICENSE.txt",
+      "bytes": 16726,
+      "sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04"
+    },
+    {
+      "path": "vendor/MEDIABUNNY-NOTICE.md",
+      "bytes": 233,
+      "sha256": "d3910b9cea68b0cde1b061d671d90e41d19650d1b76ba7d308bfac8d57d36566"
+    },
+    {
       "path": "vendor/THREE-LICENSE.txt",
       "bytes": 1081,
       "sha256": "852e0e8699169bf9f6fdc6bda3e682d078dcbc738b5d33e74df594721bff271d"
@@ -460,18 +505,28 @@
     },
     {
       "path": "多人流畅版升级说明.md",
-      "bytes": 5026,
-      "sha256": "c6a311ad1296139835d8ad6395a14b2294f5b23ce1528d8d1d8e1dd58a91bfb3"
+      "bytes": 5205,
+      "sha256": "18427a4ef946780d7178cb2a28482758572fa515fdc8bf69ba79c6e236a9870c"
+    },
+    {
+      "path": "完整动作与声音升级说明.md",
+      "bytes": 5792,
+      "sha256": "b3d71927c4fe328f4e071b42801be918753480afc06e7898919ee3ed504f58ae"
     },
     {
       "path": "按剧本拍摄升级说明.md",
-      "bytes": 3735,
-      "sha256": "385c5b9794f953319d1402ebe3e7f016b3eaad0311ce11638ded5e730d0ec4ef"
+      "bytes": 3914,
+      "sha256": "865ad081746c338ac4f198f5ee90642849e9819072cd4c496d7257217904469c"
     },
     {
       "path": "短片版使用说明.md",
-      "bytes": 7423,
-      "sha256": "b0cf14e295826a9563c24ed4ff448e6aa679973d46e68b8b5d0a02fe59bb8230"
+      "bytes": 7602,
+      "sha256": "40f2cb852749aa8d964946a1e7195982487353d48b19ce17a86daae067d1d21a"
+    },
+    {
+      "path": "网页MP4导出修复说明.md",
+      "bytes": 5319,
+      "sha256": "e524fc56246b59ddb249a74cad080bca816b8e0cbc1e9be71efede4d682c059d"
     },
     {
       "path": "运行说明.md",

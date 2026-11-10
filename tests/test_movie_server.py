@@ -20,6 +20,18 @@ def fixture():
 
 
 class PlanTests(unittest.TestCase):
+    def test_full_mode_preserves_the_whole_recording_and_long_audio_tail(self):
+        data = fixture()
+        data['plan']['exportMode'] = 'full'
+        data['events'][1]['action'] = 'handsup'
+        plan = MODULE.validate_plan(data)
+        MODULE.prepare_full_timeline(plan)
+        self.assertGreaterEqual(plan['bodyDuration'], 10)
+        self.assertGreaterEqual(plan['bodyDuration'], 9.9 + MODULE.SOUND_LENGTHS['handsup'])
+        with tempfile.TemporaryDirectory() as folder:
+            total = MODULE.write_captions(plan, Path(folder) / 'full.ass')
+            self.assertGreaterEqual(total, 20)
+
     def test_original_captions_and_audio_actions_are_read_from_events(self):
         data = fixture()
         data['plan']['scenes'][0].update(originalLine='伪造字幕', action='head')
@@ -86,7 +98,7 @@ class PlanTests(unittest.TestCase):
         self.assertAlmostEqual(scene['clipLength'], 2.05)
 
     def test_invalid_action_window_is_rejected(self):
-        for start, end in [(2000, 3000), (750, 900), (0, 9000), (-1, 2800)]:
+        for start, end in [(2000, 3000), (750, 900), (0, 11000), (-1, 2800)]:
             data = fixture()
             data['events'][0].update(clipStartMs=start, clipEndMs=end, guideStep='guide-0')
             with self.subTest(start=start, end=end), self.assertRaises(ValueError):

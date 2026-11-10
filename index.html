@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#faf7f0">
   <title>AI 戏精导演 · 多人片场</title>
   <link rel="stylesheet" href="style.css?v=14">
-  <link rel="stylesheet" href="movie-studio.css?v=guide-1">
+  <link rel="stylesheet" href="movie-studio.css?v=15">
 </head>
 <body>
 <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -53,26 +53,28 @@
     </aside>
   </div>
   <section class="film-studio" aria-labelledby="filmHeading">
-    <header class="film-heading"><div><span class="film-eyebrow" id="filmBadge">短片工作台</span><h2 id="filmHeading">把这一局，拍成一场离谱小剧场。</h2><p>记录你的卡通动作，配上剧情旁白、现场原台词和音效，生成可下载的 MP4。</p></div><span id="filmToolStatus" class="film-tool" role="status">正在连接本地视频服务…</span></header>
+    <header class="film-heading"><div><span class="film-eyebrow" id="filmBadge">短片工作台</span><h2 id="filmHeading">把这一局，拍成一场离谱小剧场。</h2><p>记录你的卡通动作，配上剧情旁白、现场原台词和音效，生成可下载的 MP4。</p></div><span id="filmToolStatus" class="film-tool" role="status">正在检查 MP4 导出能力…</span></header>
     <div class="film-controls">
       <label>拍摄方式<select id="filmMode"><option value="guided">按剧情提示拍摄</option><option value="free">自由录制</option></select></label>
       <label>剧情主题<select id="filmTheme"><option value="date">离谱相亲</option><option value="company">公司继承人</option><option value="tea">奶茶争夺战</option></select></label>
       <label>具体短片<select id="filmStory"><option value="0">第一套剧本</option><option value="1">第二套剧本</option><option value="2">第三套剧本</option></select></label>
+      <label>导出内容<select id="filmExportMode"><option value="full" selected>完整过程（保留所有画面与声音）</option><option value="actions">按动作分段（去除幕间准备）</option></select></label>
       <label>拍摄人数<select id="filmCastCount"><option value="1">1 位演员</option><option value="2">2 位演员</option><option value="3">3 位演员</option><option value="4">4 位演员</option></select></label>
-      <label id="filmDurationField">本局时长<select id="filmDuration"><option value="60">60 秒</option><option value="90">90 秒</option></select></label><span id="filmGuideBudget" class="film-note">拍完六幕自动生成，最长等待 180 秒。</span>
-      <label class="film-check"><input type="checkbox" id="filmSound" checked>成片动作音效</label><label class="film-check"><input type="checkbox" id="filmMusic" checked>轻松背景音乐</label>
+      <label id="filmDurationField">本局时长<select id="filmDuration"><option value="60">60 秒</option><option value="90">90 秒</option><option value="180">180 秒</option></select></label><span id="filmGuideBudget" class="film-note">六幕拍完自动生成 MP4。中途结束只保存素材。最长拍摄 180 秒。</span>
+      <label class="film-check"><input type="checkbox" id="filmSound" checked>成片系统台词和音效</label><label class="film-check"><input type="checkbox" id="filmMusic" checked>轻松背景音乐</label>
       <label class="film-check"><input type="checkbox" id="filmVoice" checked>语音读出动作提示</label>
     </div>
     <fieldset class="film-names"><legend>演员昵称，可在开拍前填写</legend><label>甲<input id="filmName0" maxlength="14" placeholder="演员甲" aria-label="演员甲昵称"></label><label>乙<input id="filmName1" maxlength="14" placeholder="演员乙" aria-label="演员乙昵称"></label><label>丙<input id="filmName2" maxlength="14" placeholder="演员丙" aria-label="演员丙昵称"></label><label>丁<input id="filmName3" maxlength="14" placeholder="演员丁" aria-label="演员丁昵称"></label></fieldset>
     <details id="filmGuidePreview" class="film-plan film-guide-preview" open><summary id="filmGuidePlanTitle">开拍前分镜</summary><p class="film-note">先看完整动作顺序。开拍后跟随舞台下方的提示，倒数结束再动作；识别成功后保持片刻。每一幕都会给出下一步预告。</p><ol id="filmGuidePlan"></ol></details>
     <div class="film-buttons"><button type="button" class="film-primary" id="filmRecord">开始录制本局</button><button type="button" id="filmFinish" disabled>结束并生成短片</button><button type="button" id="filmDemo">试拍示例短片 · 无需摄像头</button><span class="film-counter"><b id="filmTimer">0 秒</b><span id="filmEventCount">0 个动作</span></span></div>
     <div id="filmRoster" class="film-roster" aria-label="本局演员身份"></div>
-    <p class="film-note">仅录制卡通舞台。按剧本拍摄时，只接受指定演员的指定动作，六幕完成后自动生成。准备和等待时间不进入成片。多人请保持位置并确认舞台昵称。语音提示是否可用取决于浏览器与系统语音。</p>
-    <div class="film-status-row"><p id="filmStatus" role="status" aria-live="polite">选择具体短片，先看六幕动作顺序。开拍后跟随提示，逐幕完成。</p><button type="button" id="filmRetryTool" hidden>重新检查视频服务</button></div>
+    <p class="film-note">按剧本拍摄会在六幕完成后自动停止并生成 MP4，无需再点结束。中途点击提前结束只保存原始素材。自由录制可随时点击结束并生成短片。默认保留整局全部画面与系统声音，成片时长按实际录制计算。按动作分段会去除幕间准备，仍保留提示后的动作过程和完整系统声音。最多 4 人，单局最长 180 秒；原始素材达到 75 MB 时会停止。</p>
+    <div class="film-status-row"><p id="filmStatus" role="status" aria-live="polite">选择具体短片，先看六幕动作顺序。开拍后跟随提示，逐幕完成。</p><button type="button" id="filmRetryTool" hidden>重新检查导出能力</button></div>
     <progress id="filmProgress" max="100" value="0" aria-label="短片生成进度"></progress>
-    <div class="film-buttons film-secondary"><button type="button" id="filmGenerate" disabled>用本局素材生成</button><button type="button" id="filmVariant" disabled>换一版剧情</button><button type="button" id="filmCancel" hidden>取消生成</button><a id="filmRaw" hidden>保存本局卡通素材</a></div>
+    <div class="film-buttons film-secondary"><button type="button" id="filmGenerate" disabled>用本局素材生成</button><button type="button" id="filmVariant" disabled>换一版剧情</button><button type="button" id="filmCancel" hidden>取消生成</button><button type="button" id="filmImportRaw">旧 WebM 素材转 MP4</button><input id="filmImportFile" type="file" accept="video/webm,video/mp4,.webm,.mp4" hidden></div>
+    <details id="filmRawPreview" class="film-plan" hidden><summary>原始素材备份（不是配音成片）</summary><a id="filmRaw" hidden>保存原始素材</a><video id="filmRawPlayer" controls playsinline preload="metadata"></video><p class="film-note">原始素材没有重新混入系统配音，完整画面和声音请下载下方 MP4 成片。WebM 素材可在本网页预览，部分系统播放器无法直接打开。旧素材可用上方按钮转换为 MP4，转换不会补造剧情。</p></details>
     <details id="filmPlanDetails" class="film-plan" hidden><summary id="filmPlanTitle">本局分镜</summary><p id="filmShortNote"></p><ol id="filmStoryboard"></ol></details>
-    <section id="filmResult" class="film-result" hidden aria-label="生成的短片"><div class="film-result-heading"><h3 id="filmResultTitle">本场小剧场</h3><div><a id="filmDownload" class="film-download">下载 MP4</a><a id="filmStoryDownload">下载分镜</a></div></div><video id="filmPlayer" controls playsinline preload="metadata"></video><p>旁白以字幕呈现，原台词单独保留。按剧本拍摄的素材与原剧本对应，换剧本需要重新拍摄；自由录制可以用同一份素材换剧情。</p></section>
+    <section id="filmResult" class="film-result" hidden aria-label="生成的短片"><div class="film-result-heading"><h3 id="filmResultTitle">本场小剧场</h3><div><a id="filmDownload" class="film-download">下载 MP4</a><a id="filmStoryDownload">下载分镜</a></div></div><video id="filmPlayer" controls playsinline preload="metadata"></video><p>成片包含完整系统动作台词和音效，剧情旁白以字幕呈现。按剧本拍摄的素材与原剧本对应，换剧本需要重新拍摄；自由录制可以用同一份素材换剧情。</p></section>
   </section>
   <details class="action-guide"><summary>怎么玩？查看 9 个动作与台词</summary><p>动作保持片刻，系统会自动配上当前强度的台词。一个动作结束后，回到自然姿势再做下一个。</p><div id="actionList" class="action-list"></div></details>
   <section class="history-section"><div class="history-heading"><h2><svg aria-hidden="true"><use href="#i-clapper"/></svg>片场记录</h2><span class="history-count" id="eventCount">0 次加戏</span></div><ol id="history" class="history"><li class="empty-history">故事还没开始，等你们来演。</li></ol></section>
@@ -84,12 +86,12 @@
 <script src="motion.js?v=14"></script>
 <script src="vision-client.js?v=14"></script>
 <script src="movie-story.js?v=guide-1"></script>
-<script src="movie-guide.js?v=1"></script>
-<script src="movie-studio.js?v=14"></script>
+<script src="movie-guide.js?v=16"></script>
+<script src="movie-studio.js?v=16"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
-const APP_BUILD = 'V1.4 · 多人流畅版', AI_VERSION = '0.10.21', MAX_PLAYERS = 4;
+const APP_BUILD = 'V1.6 · 完整动作与声音', AI_VERSION = '0.10.21', MAX_PLAYERS = 4;
 const video = $('video'), canvas = $('canvas'), ctx = canvas.getContext('2d');
 const frame = document.createElement('canvas'), frameCtx = frame.getContext('2d');
 const avatars=Characters.all.map(character=>({...character}));
@@ -525,7 +527,7 @@ function startDemo() {
 }
 async function loadAvatarModule(){
   if(avatarModule)return avatarModule;
-  avatarImport??=import('./avatar3d.js?v=14');
+  avatarImport??=import('./avatar3d.js?v=16');
   try{avatarModule=await avatarImport;return avatarModule;}catch(e){avatarImport=null;throw e;}
 }
 async function initAvatar3D(){

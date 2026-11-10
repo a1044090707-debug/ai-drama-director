@@ -1,7 +1,7 @@
 import * as T from './vendor/three.module.js';
 import {createAvatarRenderer as createAnimals} from './animal-avatar3d.mjs';
 import {createCharacterPool,HUMAN_MODELS} from './character-models.mjs?v=14';
-import {AvatarDriver} from './model-preview/fullbody/driver.mjs';
+import {AvatarDriver} from './model-preview/fullbody/driver.mjs?v=16';
 import {actionObservation} from './action-poses.mjs';
 
 export const MODEL_COUNT=4+HUMAN_MODELS.length;
@@ -69,7 +69,7 @@ export async function createAvatarRenderer({maxInstances=4,initialModels=[],onEr
       }
       if(item.fullBody){
         const count=item.slotCount||Math.max(people.length,1);
-        const scale=Math.min(h*.79/4.05,w/(count*(item.slotWidthUnits||3.8)));
+        const scale=Math.min(h*.83/4.9,w/(count*(item.slotWidthUnits||3.8)));
         wrapper.scale.setScalar(scale);wrapper.position.set((item.stageX??o.x??.5)*w,h*.13,0);
         wrapper.rotation.y=item.viewYaw||0;
       }else{

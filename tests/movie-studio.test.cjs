@@ -7,7 +7,7 @@ function harness(){
   append(...children){this.children.push(...children);},setAttribute(){},addEventListener(){}};}
  const context=vm.createContext({window:{},document:{getElementById:id=>{if(!elements.has(id))elements.set(id,element());return elements.get(id);},
    createElement:element},console,Map,Set,Math,Promise,Number,String,Array,AbortController,
-   performance:{now:()=>6000},clearInterval(){},cancelAnimationFrame(){}});
+   performance:{now:()=>6000},setTimeout,clearTimeout,clearInterval(){},cancelAnimationFrame(){}});
  vm.runInContext(fs.readFileSync(path.join(__dirname,'../movie-studio.js'),'utf8'),context);
  const studio=Object.create(context.window.MovieStudio.prototype);
  const tracks=[{id:10,x:.25,visible:true,avatar:4},{id:20,x:.75,visible:true,avatar:5}];
@@ -61,4 +61,31 @@ test('a round awaiting initial tool preparation generates automatically when rea
    update(){},generate(){generated++;},message(){}});
  context.fetch=async()=>({ok:true,json:async()=>({ready:true,state:'ready'})});
  await studio.checkHealth();assert.equal(generated,1);assert.equal(studio.pendingAutoGenerate,false);
+});
+
+test('static remote hosting checks the browser instead of a missing local API',async()=>{
+ const {studio,context,elements}=harness();let requests=0;
+ context.window.location={hostname:'example.github.io'};context.fetch=async()=>{requests++;throw new Error('must not request');};
+ Object.assign(studio,{update(){},message(){},exporter:async()=>({capability:async()=>({ready:true,message:'browser ready'})})});
+ await studio.checkHealth(true);assert.equal(requests,0);assert.equal(studio.health.kind,'browser');assert.equal(studio.health.ready,true);
+ assert.equal(elements.get('filmRetryTool').textContent,'重新检查导出能力');assert.equal(elements.get('filmRetryTool').disabled,false);
+});
+
+test('recheck reports lack of browser codecs and releases the checking button',async()=>{
+ const {studio,context,elements}=harness();const messages=[];context.window.location={hostname:'example.github.io'};
+ Object.assign(studio,{update(){},message(text){messages.push(text);},exporter:async()=>({capability:async()=>({ready:false,message:'unsupported codec'})})});
+ await studio.checkHealth(true);assert.equal(studio.health.ready,false);assert.equal(studio.health.state,'error');
+ assert.ok(messages.includes('unsupported codec'));assert.equal(elements.get('filmRetryTool').disabled,false);
+});
+
+test('guided early finish saves material without generating an incomplete film',async()=>{
+ const {studio}=harness();let generated=0;
+ Object.assign(studio,{guide:{complete:false,accepted:['e']},events:[{id:'e'}],blob:{},finishCapture:async()=>{studio.recording=false;},generate:async()=>generated++,message(){}});
+ studio.adapter.stop=()=>{};await studio.endAndGenerate();assert.equal(generated,0);assert.equal(studio.recording,false);
+});
+
+test('free recording finish generates once after recorder finalization',async()=>{
+ const {studio}=harness();let generated=0;
+ Object.assign(studio,{guide:null,events:[{id:'e'}],blob:{},health:{ready:true},finishCapture:async()=>{studio.recording=false;},generate:async()=>generated++,message(){}});
+ studio.adapter.stop=()=>{};await studio.endAndGenerate();await studio.endAndGenerate();assert.equal(generated,1);
 });

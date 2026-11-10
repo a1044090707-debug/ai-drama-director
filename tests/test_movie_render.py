@@ -15,6 +15,38 @@ from movie_tools import ensure_ffmpeg
 
 
 class RenderTests(unittest.TestCase):
+    def test_full_process_keeps_late_frames_and_complete_speech(self):
+        try:
+            executable = ensure_ffmpeg(ROOT, download=False)
+        except RuntimeError:
+            self.skipTest('FFmpeg is required.')
+        manager = MovieManager(ROOT)
+        manager.ffmpeg = executable
+        try:
+            with tempfile.TemporaryDirectory(dir=str(manager.storage)) as temporary:
+                source = Path(temporary) / 'full-source.mp4'
+                subprocess.run([str(executable), '-v', 'error', '-f', 'lavfi', '-i', 'color=blue:s=960x540:r=24:d=4',
+                    '-f', 'lavfi', '-i', 'color=red:s=960x540:r=24:d=4', '-filter_complex',
+                    '[0:v][1:v]concat=n=2:v=1:a=0[v]', '-map', '[v]', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', str(source)],check=True,capture_output=True)
+                manager.records['full'] = source
+                job_id = manager.create_job({'recordingId':'full','duration':8,'sound':True,'music':False,
+                    'events':[{'id':'late','action':'handsup','timeMs':7500,'actorName':'甲'}],
+                    'plan':{'exportMode':'full','title':'完整过程','scenes':[{'eventId':'late','duration':5.4,'narration':'后段动作'}]}})
+                deadline=time.time()+120
+                while manager.jobs[job_id]['state'] in ('queued','rendering') and time.time()<deadline:
+                    time.sleep(.2)
+                self.assertEqual(manager.jobs[job_id]['state'],'done',manager.public_job(job_id))
+                movie=manager.jobs[job_id]['folder']/'movie.mp4'
+                pixels=subprocess.run([str(executable),'-v','error','-ss','9.5','-i',str(movie),'-frames:v','1','-vf',
+                    'format=rgb24,crop=1:1:640:300','-f','rawvideo','-pix_fmt','rgb24','-'],capture_output=True,check=True).stdout
+                self.assertGreater(pixels[0],pixels[2]+100)
+                pcm=subprocess.run([str(executable),'-v','error','-ss','14','-i',str(movie),'-t','0.35','-vn','-f','f32le','-ac','1','-'],capture_output=True,check=True).stdout
+                import array,math
+                values=array.array('f');values.frombytes(pcm)
+                self.assertGreater(math.sqrt(sum(x*x for x in values)/len(values)),.001)
+        finally:
+            manager.pool.shutdown(wait=True)
+
     def test_action_window_excludes_preparation_and_waiting_frames(self):
         try:
             executable = ensure_ffmpeg(ROOT, download=False)

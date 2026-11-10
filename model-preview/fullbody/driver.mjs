@@ -1,4 +1,5 @@
 import * as T from '../../vendor/three.module.js';
+import {PoseStabilizer,ArmHold} from './pose-stabilizer.mjs?v=16';
 const V=(p)=>new T.Vector3(p.x,-p.y,-p.z),clamp=T.MathUtils.clamp;
 const valid=(p)=>p&&[p.x,p.y,p.z].every(Number.isFinite)&&(p.visibility??1)>.55;
 const midpoint=(a,b)=>a.clone().add(b).multiplyScalar(.5);
@@ -12,14 +13,19 @@ export class AvatarDriver{
     this.targets[name]=new T.Quaternion().setFromUnitVectors(rest,direction.normalize()).multiply(a.restWorldQuaternions?.[name]||new T.Quaternion());
   }
   update({worldLandmarks,landmarks,faceMatrix,blendshapes,headRotation,action},time){
-    const a=this.avatar,w=worldLandmarks,p=landmarks;this.lastSeen=time;this.legsVisible=false;this.feetVisible=false;
+    this.poseFilter??=new PoseStabilizer();this.armHold??=new ArmHold();
+    const a=this.avatar,w=this.poseFilter.update(worldLandmarks,landmarks,time),p=landmarks;this.lastSeen=time;this.legsVisible=false;this.feetVisible=false;
+    const previousTargets=Object.fromEntries(Object.entries(this.targets).map(([key,q])=>[key,q.clone()])),previousContact=this.contactAction,previousSides=this.contactSides||[];
     // Start with neutral WORLD orientations. Upper body and each limb then
     // override independently, so an occluded leg cannot keep a stale bent pose.
     for(const key of Object.keys(this.targets))this.targets[key].copy(a.neutralWorldQuaternions?.[key]||new T.Quaternion());
     const visible=(ids)=>w&&ids.every(i=>valid(w[i])&&(!p||((p[i]?.visibility??1)>.55&&p[i]?.y>=-.04&&p[i]?.y<=1.04)));
     this.contactAction=action==='forehead'||action==='head'?action:null;
     this.contactSides=['Left','Right'].filter((side,i)=>visible(i===0?[11,13,15]:[12,14,16])&&w[i===0?15:16].y<w[i===0?11:12].y);
-    if(action==='forehead'&&this.contactSides.length>1){const nose=valid(w[0])?V(w[0]):new T.Vector3(0,-.6,0);this.contactSides.sort((a,b)=>V(w[a==='Left'?15:16]).distanceToSquared(nose)-V(w[b==='Left'?15:16]).distanceToSquared(nose));this.contactSides.length=1;}
+    if(action==='forehead'&&this.contactSides.length>1){const nose=valid(w[0])?V(w[0]):new T.Vector3(0,-.6,0);this.contactSides.sort((a,b)=>V(w[a==='Left'?15:16]).distanceToSquared(nose)-V(w[b==='Left'?15:16]).distanceToSquared(nose));
+      if(previousContact==='forehead'&&this.contactSides.includes(previousSides[0]))this.contactSides=[previousSides[0]];else this.contactSides.length=1;}
+    if(this.contactAction)this.lastContactAt=time;
+    else if(!action&&time-(this.lastContactAt??-Infinity)<=350){this.contactAction=previousContact;this.contactSides=previousSides;}
     if(visible([11,12,23,24])){
       const left=V(w[11]),right=V(w[12]),hips=midpoint(V(w[23]),V(w[24])),up=midpoint(left,right).sub(hips).normalize();
       const x=left.clone().sub(right).normalize(),z=x.clone().cross(up).normalize(),y=z.clone().cross(x).normalize();
@@ -27,10 +33,15 @@ export class AvatarDriver{
     }
     for(const [side,ids] of [['Left',[11,13,15,23,25,27,29,31]],['Right',[12,14,16,24,26,28,30,32]]]){
       const [s,e,h,hip,knee,ankle,heel,toe]=ids;
+      this.armSeen??={};
+      const armVisible=visible([s,e,h]);
       if(visible([s,e]))this.direction(side+'UpperArm',side+'ForeArm',V(w[e]).sub(V(w[s])));
       if(visible([e,h]))this.direction(side+'ForeArm',side+'Hand',V(w[h]).sub(V(w[e])));
       const armDelta=this.targets[side+'ForeArm'].clone().multiply((a.restWorldQuaternions?.[side+'ForeArm']||new T.Quaternion()).clone().invert());
       this.targets[side+'Hand'].copy(armDelta).multiply(a.restWorldQuaternions?.[side+'Hand']||new T.Quaternion());
+      if(armVisible)this.armSeen[side]=time;
+      else if(time-(this.armSeen[side]??-Infinity)<=350)for(const key of ['UpperArm','ForeArm','Hand'])this.targets[side+key].copy(previousTargets[side+key]);
+      this.armHold.update(side,p,this.targets,time,action);
       if(visible([hip,knee,ankle])){
         this.legsVisible=true;this.direction(side+'UpperLeg',side+'LowerLeg',V(w[knee]).sub(V(w[hip])));this.direction(side+'LowerLeg',side+'Foot',V(w[ankle]).sub(V(w[knee])));
         // Foot orientation is estimated from heel/foot-index landmarks. A missing

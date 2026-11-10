@@ -75,3 +75,5 @@ body.film-guiding .stage .subtitle{visibility:hidden}
 @media(max-width:500px){.film-stage-cue{left:2%;right:2%;bottom:5%;padding:7px 9px;border-radius:9px}.film-stage-cue span,.film-stage-cue small{font-size:10px;line-height:1.45}}
 @media(max-width:800px){.film-studio{padding:20px}.film-heading{flex-direction:column;gap:10px}.film-tool{max-width:none}.film-names{grid-template-columns:repeat(2,minmax(0,1fr))}.film-plan ol{grid-template-columns:repeat(2,minmax(0,1fr))}.film-counter{margin:5px 0}.film-result-heading{flex-direction:column;align-items:flex-start}}
 @media(max-width:500px){.film-plan ol{grid-template-columns:1fr}.film-controls{gap:12px}.film-check{padding-top:0}.film-buttons>button{flex:1 1 45%}.film-controls>label:not(.film-check){flex:1 1 40%}.film-result-heading>div{flex-wrap:wrap}.film-status-row{align-items:flex-start}}
+
+#filmRawPlayer{display:block;width:100%;max-height:450px;background:#293826;border-radius:12px}#filmImportFile[hidden]{display:none}

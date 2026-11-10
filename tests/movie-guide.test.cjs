@@ -52,3 +52,17 @@ test('a completed film preserves all six planned beats without post-hoc reselect
  assert.deepEqual(story.scenes.map(s=>s.originalLine),events.map(e=>e.originalLine));
  assert.throws(()=>Story.buildGuidedStory(plan,events.slice(0,5)),/六个分镜/);
 });
+
+test('the full prompted movement and complete system sound are covered',()=>{
+ const run=new GuideRun(Story.createGuide());const at=ready(run);
+ const event={id:'a',timeMs:at+2500,cueStartMs:at-350,soundDurationMs:5130,action:'turn',actorId:'actor-0'};
+ assert.ok(run.accept(event,at+2500));assert.equal(event.clipStartMs,at-350);
+ assert.ok(event.clipEndMs>=event.timeMs+5130);run.update(at+2500+1800);assert.equal(run.phase,'hold');
+ run.update(at+2500+5310);assert.equal(run.index,1);
+});
+
+test('a stale frame captured before the cue cannot advance a later action phase',()=>{
+ const run=new GuideRun(Story.createGuide());const at=ready(run);
+ assert.equal(run.accept({id:'old',timeMs:at-200,action:'turn',actorId:'actor-0'},at-200),false);
+ assert.equal(run.accepted.length,0);
+});

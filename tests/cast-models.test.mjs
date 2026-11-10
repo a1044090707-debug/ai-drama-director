@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import * as T from '../vendor/three.module.js';
 import {HUMAN_MODELS,createCharacterPool} from '../character-models.mjs';
+import {actionObservation} from '../action-poses.mjs';
 import {AvatarDriver} from '../model-preview/fullbody/driver.mjs';
 
 globalThis.self=globalThis;
@@ -21,7 +22,12 @@ for(const model of HUMAN_MODELS){
   const box=new T.Box3().setFromObject(actor.root,true);
   assert.ok(Number.isFinite(box.min.y)&&box.max.y>3.5,'actual full-body geometry');
   const driver=new AvatarDriver(actor);driver.update({headRotation:{yaw:.3}},0);driver.frame(.1,20);
-  assert.equal(driver.legsVisible,false);pool.release(actor);
+  assert.equal(driver.legsVisible,false);
+  const sample=actionObservation('handsup');driver.update({worldLandmarks:sample.worldPose,landmarks:sample.pose,headRotation:sample.rotation,action:'handsup'},100);
+  for(let step=0;step<18;step++)driver.frame(.1,100+step*16);
+  const raised=new T.Box3().setFromObject(actor.root,true);
+  assert.ok(raised.max.y<4.9,'raised hands stay inside the reserved camera height');
+  console.log(model.name,'raised height',raised.max.y.toFixed(2));pool.release(actor);
   console.log(model.name,'LAZY_MODEL_PASS');
 }
 assert.equal(pool.size,8);

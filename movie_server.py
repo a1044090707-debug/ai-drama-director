@@ -17,6 +17,7 @@ from urllib.parse import quote, urlparse
 
 ACTION_FILES = {key: key + '.mp3' for key in (
     'forehead', 'head', 'turn', 'raise', 'handsup', 'wave', 'arms', 'tilt', 'mouth')}
+SOUND_LENGTHS = {'arms':3.34,'forehead':4.41,'handsup':5.14,'head':4.78,'mouth':2.44,'raise':2.58,'tilt':2.54,'turn':1.38,'wave':1.54}
 MAX_UPLOAD = 80 * 1024 * 1024
 ID_PATTERN = re.compile(r'^[a-f0-9]{32}$')
 
@@ -42,8 +43,8 @@ def number(value, low, high):
 def validate_plan(payload):
     duration = number(payload.get('duration'), 0.5, 185)
     events = payload.get('events')
-    if not isinstance(events, list) or not 1 <= len(events) <= 100:
-        raise ValueError('需要至少一个有效动作，最多保留 100 个动作。')
+    if not isinstance(events, list) or not 1 <= len(events) <= 128:
+        raise ValueError('需要至少一个有效动作，最多保留 128 个动作。')
     by_id = {}
     for event in events:
         if not isinstance(event, dict) or event.get('action') not in ACTION_FILES:
@@ -62,7 +63,7 @@ def validate_plan(payload):
         if 'clipStartMs' in event or 'clipEndMs' in event:
             start = number(event.get('clipStartMs'), 0, duration * 1000)
             end = number(event.get('clipEndMs'), 0, duration * 1000 + 100)
-            if not start <= stamp < end or not 300 <= end - start <= 5000:
+            if not start <= stamp < end or not 300 <= end - start <= 185000:
                 raise ValueError('动作素材窗口无效。')
             by_id[key]['clipStart'] = start / 1000
             by_id[key]['clipLength'] = min(end / 1000, duration) - start / 1000
@@ -71,8 +72,8 @@ def validate_plan(payload):
     if not isinstance(plan, dict):
         raise ValueError('缺少剧情分镜。')
     scenes = plan.get('scenes')
-    if not isinstance(scenes, list) or not 1 <= len(scenes) <= 8:
-        raise ValueError('分镜数量必须为 1 至 8。')
+    if not isinstance(scenes, list) or not 1 <= len(scenes) <= 128:
+        raise ValueError('分镜数量必须为 1 至 128。')
     result = []
     selected = set()
     for scene in scenes:
@@ -83,7 +84,7 @@ def validate_plan(payload):
         selected.add(scene['eventId'])
         item = dict(by_id[scene['eventId']])
         item['narration'] = clean_text(scene.get('narration', ''), 120)
-        item['duration'] = number(scene.get('duration', 4), 3, 4.5)
+        item['duration'] = number(scene.get('duration', 4), 0.3, 185)
         item['effect'] = scene.get('effect') if scene.get('effect') in ('zoom', 'normal') else 'normal'
         # Never seek beyond the uploaded round, including events close to its end.
         item['start'] = item.get('clipStart', max(0, min(item['time'] - 1.0, duration - 0.3)))
@@ -112,6 +113,8 @@ def validate_plan(payload):
         'sound': bool(payload.get('sound', True)),
         'demo': bool(payload.get('demo', False)),
         'guided': guided,
+        'mode': 'full' if plan.get('exportMode') == 'full' else 'actions',
+        'completeActions': plan.get('exportMode') in ('full', 'actions'),
     }
 
 
@@ -129,7 +132,19 @@ def ass_text(text, width=27):
     return r'\N'.join(lines)
 
 
+def prepare_full_timeline(plan):
+    if plan.get('mode') != 'full':
+        return
+    voice_end = 0
+    for scene in plan['scenes']:
+        scene['soundAt'] = max(2.5 + scene['time'], voice_end + .08)
+        if plan['sound']:
+            voice_end = scene['soundAt'] + SOUND_LENGTHS[scene['action']]
+    plan['bodyDuration'] = max(plan['duration'], voice_end - 2.5 + .15)
+
+
 def write_captions(plan, target):
+    prepare_full_timeline(plan)
     header = '''[Script Info]
 ScriptType: v4.00+
 PlayResX: 1280
@@ -153,12 +168,23 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     add(0, 2.5, 'Title', plan['title'])
     add(0, 2.5, 'Card', plan['opening'])
     cursor = 2.5
-    for index, scene in enumerate(plan['scenes']):
-        end = cursor + scene['duration']
-        add(cursor, end, 'Narration', scene['narration'])
-        add(cursor, end, 'Original', '现场原台词 · ' + scene['actor'] + '\n' + scene['line'])
-        add(cursor, end, 'Label', f"第 {index + 1} 幕 / {len(plan['scenes'])} 幕")
-        cursor = end
+    full = plan.get('mode') == 'full'
+    if full:
+        header = header.replace('[Events]', 'Style: FullNarration,Microsoft YaHei,30,&H00FFFFFF,&H000000FF,&H00282C19,&H88000000,-1,0,0,0,100,100,0,0,3,6,0,8,60,60,560,1\n[Events]')
+        for index, scene in enumerate(plan['scenes']):
+            start = scene.get('soundAt', 2.5 + scene['time'])
+            end = min(2.5 + plan['bodyDuration'], start + max(2.5, SOUND_LENGTHS[scene['action']]))
+            add(start, end, 'FullNarration', scene['narration'])
+            add(start, end, 'Original', '现场原台词 · ' + scene['actor'] + '\n' + scene['line'])
+            add(start, end, 'Label', f"动作 {index + 1} / {len(plan['scenes'])}")
+        cursor += plan['bodyDuration']
+    else:
+        for index, scene in enumerate(plan['scenes']):
+            end = cursor + scene['duration']
+            add(cursor, end, 'Narration', scene['narration'])
+            add(cursor, end, 'Original', '现场原台词 · ' + scene['actor'] + '\n' + scene['line'])
+            add(cursor, end, 'Label', f"第 {index + 1} 幕 / {len(plan['scenes'])} 幕")
+            cursor = end
     add(cursor, cursor + 2.5, 'Title', '本场，全员有戏')
     add(cursor, cursor + 2.5, 'Card', plan['ending'])
     add(0, cursor + 2.5, 'Theme', ('示例演出 · ' if plan['demo'] else '') + plan['theme'])
@@ -274,7 +300,9 @@ class MovieManager:
         try:
             job.update(state='rendering', progress=3, message='整理本局素材')
             folder, plan = job['folder'], job['plan']
+            full = plan.get('mode') == 'full'
             total = write_captions(plan, folder / 'captions.ass')
+            plan['outputDuration'] = total
             (folder / 'story.json').write_text(json.dumps(plan, ensure_ascii=False, indent=2), encoding='utf-8')
             encode = ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23', '-pix_fmt', 'yuv420p', '-r', '24', '-an']
             # Browser WebM can have variable timestamps and no seek index. Normalize once
@@ -288,10 +316,17 @@ class MovieManager:
                 self.run(job, ['-f', 'lavfi', '-i', f'color=c=0x293826:s=1280x720:r=24:d={duration}',
                                '-t', str(duration)] + encode + [name + '.mp4'])
             segments.append('opening.mp4')
-            for index, scene in enumerate(plan['scenes']):
+            if full:
+                self.run(job, ['-i', 'source-cfr.mp4', '-vf',
+                    f"scale=854:480,pad=1280:720:213:70:color=0xdce5c9,tpad=stop_mode=clone:stop_duration={plan['bodyDuration']},trim=duration={plan['bodyDuration']},setpts=PTS-STARTPTS",
+                    '-t', str(plan['bodyDuration'])] + encode + ['full-process.mp4'])
+                segments.append('full-process.mp4')
+            for index, scene in enumerate([] if full else plan['scenes']):
                 job.update(progress=8 + int(index / len(plan['scenes']) * 55),
                            message=f"剪辑第 {index + 1} / {len(plan['scenes'])} 个动作镜头")
                 filters = 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2'
+                if plan.get('completeActions'):
+                    filters = 'scale=854:480,pad=1280:720:213:70:color=0xdce5c9'
                 if 'clipLength' in scene:
                     filters = f"trim=duration={scene['clipLength']},setpts=PTS-STARTPTS," + filters
                 if scene['effect'] == 'zoom':
@@ -315,7 +350,7 @@ class MovieManager:
             job.update(progress=76, message='添加旁白字幕、原台词和音效')
             write_music(folder / 'music.wav')
             args = ['-i', 'picture.mp4', '-stream_loop', '-1', '-i', 'music.wav']
-            volume = '0.15' if plan['music'] else '0'
+            volume = '0.07' if plan['music'] else '0'
             filters = [f'[1:a]atrim=duration={total},asetpts=PTS-STARTPTS,volume={volume},afade=t=out:st={total-1}:d=1[music]']
             mixes = ['[music]']
             cursor = 2.5
@@ -323,9 +358,9 @@ class MovieManager:
                 for index, scene in enumerate(plan['scenes']):
                     sound = self.root / 'assets' / 'sounds' / ACTION_FILES[scene['action']]
                     args += ['-i', str(sound)]
-                    delay = round((cursor + 0.15) * 1000)
-                    length = scene['duration'] - 0.3
-                    filters.append(f'[{index+2}:a]atrim=duration={length},asetpts=PTS-STARTPTS,volume=0.7,afade=t=out:st={length-0.2}:d=0.2,adelay={delay}|{delay}[s{index}]')
+                    offset = max(0, scene['time'] - scene['start'])
+                    delay = round((scene['soundAt'] if full else cursor + offset) * 1000)
+                    filters.append(f'[{index+2}:a]asetpts=PTS-STARTPTS,volume=0.85,adelay={delay}|{delay}[s{index}]')
                     mixes.append(f'[s{index}]')
                     cursor += scene['duration']
             filters.append(''.join(mixes) + f'amix=inputs={len(mixes)}:duration=first:normalize=0,alimiter=limit=0.95[audio]')
